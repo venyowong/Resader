@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using Coravel.Invocable;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using MySql.Data.MySqlClient;
 using Resader.Grains.Models;
 using Resader.Host.Daos;
@@ -21,10 +22,13 @@ namespace Resader.Host
 
         private IDbConnection connection;
 
-        public RssFetcher(ILogger<RssFetcher> logger, IDbConnection connection)
+        private Configuration configuration;
+
+        public RssFetcher(ILogger<RssFetcher> logger, IDbConnection connection, IOptions<Configuration> config)
         {
             this.logger = logger;
             this.connection = connection;
+            this.configuration = config.Value;
         }
 
         public FeedOverview Fetch(string feed, int seconds)
@@ -159,7 +163,7 @@ namespace Resader.Host
 
                 try
                 {
-                    using (var conn = new MySqlConnection(this.connection.ConnectionString))
+                    using (var conn = new MySqlConnection(this.configuration?.MySql?.ConnectionString))
                     {
                         if (conn.GetArticle(articleId) == null)
                         {
@@ -218,7 +222,7 @@ namespace Resader.Host
 
                 try
                 {
-                    using (var conn = new MySqlConnection(this.connection.ConnectionString))
+                    using (var conn = new MySqlConnection(this.configuration?.MySql?.ConnectionString))
                     {
                         if (conn.GetArticle(articleId) == null)
                         {
