@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Resader</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    </head>
+
+    <body>
+        <div id="app">
+          <el-container>
+            <el-aside width="300px">
+              <el-menu mode="vertical">
+                <el-menu-item index="1">
+                    <i class="el-icon-s-home"></i>
+                    <span>Resader</span>
+                </el-menu-item>
+                <el-submenu index="2">
+                    <template slot="title">
+                        <i class="el-icon-document"></i>
+                        <span>RSS</span>
+                    </template>
+                    <el-menu-item v-bind:id="feed.Id" v-for="feed in feeds" @click="getArticles(feed.Id)">
+                      {{feed.Title}}
+                    </el-menu-item>
+                </el-submenu>
+                <el-menu-item index="3" @click="subscribe">
+                    <i class="el-icon-download"></i>
+                    <span>Import</span>
+                </el-menu-item>
+                <el-menu-item index="4" @click="exportOpml">
+                    <i class="el-icon-upload2"></i>
+                    <span>Export</span>
+                </el-menu-item>
+                <el-menu-item index="5" @click="toSettings">
+                    <i class="el-icon-setting"></i>
+                    <span>Settings</span>
+                </el-menu-item>
+                <el-menu-item index="6" @click="logout">
+                  <i class="el-icon-switch-button"></i>
+                  <span>Logout</span>
+              </el-menu-item>
+              </el-menu>
+            </el-aside>
+            <el-main>
+              <div style="float: right;">
+                <el-button type="danger" round style="margin-right: 10px;" @click="unsubscribe">取消订阅</el-button>
+                <el-switch v-model="ignoreRead" active-color="#13ce66" inactive-color="#dcdfe6" active-text="只展示未读" 
+                  inactive-text="展示全部">
+                </el-switch>
+              </div>
+              <div>
+                <h3>
+                  {{feedTitle}}
+                </h3>
+              </div>
+              <div style="padding-bottom: 26px;" v-for="article in articles" v-if="!ignoreRead || !article.Read">
+                <div>
+                  <el-link :underline="false" @click="readArticle(article.Id)">
+                    <h3>
+                      <font v-if="!article.Read">{{article.Title}}</font>
+                      <font color="#808080" v-else>{{article.Title}}</font>
+                    </h3>
+                  </el-link>
+                </div>
+                <p><font color="#808080">{{article.Summary}}</font></p> 
+                <div><font color="#808080">{{article.Published}}</font></div>
+              </div>
+              <el-row v-if="articles != null && articles.length > 0">
+                <el-button @click="readAndLoad">以上标记为已读，并加载更多</el-button>
+                <el-button @click="loadMore">加载更多</el-button>
+              </el-row>
+            </el-main>
+          </el-container>
+        </div>
+        
+        <script src="https://unpkg.com/vue/dist/vue.js"></script>
+        <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+        <script src="./js/site.js"></script>
+        <script>
+          var user = localStorage.getItem("user");
+          if (!user) {
+            window.location.href = "./login.html";
+          }
+          user = JSON.parse(user);
+
+          function readArticles(ids) {
+            fetch(`./grains/${user.Id}/article/read`, {
+              method: "POST",
+              body: JSON.stringify(ids),
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                "Authorization": `Bearer ${user.Token}`
+              }
+            })
+            .then(function(response) {
+              if (response.status == 200) {
+                return response.json();
+              }
+            })
+            .then(function(response) {
+              if (checkResponse(response)) {
+                for (var i = 0; i < ids.length; i++) {
+                  var article = app.articles.find(a => a.Id == ids[i]);
+                  article.Read = true;
+                }
+              }
+            });
+          }
+
+          var app = new Vue({
+            el: '#app',
+            data: function() {
+              var app = { 
+                feeds: [],
+                feedId: "",
+                feedTitle: "",
+                articles: [],
+                ignoreRead: false
+              };
+
+              fetch(`./grains/${user.Id}/rss/feeds`, {
+                method: "GET",
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json',
+                  "Authorization": `Bearer ${user.Token}`
+                }
+              })
+              .then(function(response) {
+                if (response.status == 200) {
+                  return response.json();
+                }
+              })
+              .then(function(response) {
+                if (checkResponse(response)) {
+                  app.feeds = response.Data;
+                }
+              });
+
+              return app;
+            },
+            methods: {
+              subscribe: function() {
+                this.$prompt('请输入 RSS 链接', 'Import', {
+                  confirmButtonText: '确定',
+                  cancelButtonText: '取消'
+                }).then(({ value }) => {
+                  fetch(`./grains/${user.Id}/rss/subscribe`, {
+                    body: JSON.stringify([value]),
+                    method: "POST",
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Accept': 'application/json',
+                      "Authorization": `Bearer ${user.Token}`
+                    }
+                  })
+                  .then(function(response) {
+                    if (response.status == 200) {
+                      return response.json();
+                    }
+                  })
+                  .then(function(response) {
+                    if (checkResponse(response)) {
+                      app.feeds.push({
+                        Id: response.Data[0].Id,
+                        Title: response.Data[0].Title
+                      })
+                      app.feedTitle = response.Data[0].Title;
+                      app.articles = response.Data[0].Articles;
+                    }
+                  });
+                });
+              },
+              loadArticles: function(feedId, endTime, append) {
+                fetch(`./grains/${user.Id}/rss/articles?feedId=${feedId}&page=0&pageCount=30&endTime=${endTime}`, {
+                  method: "GET",
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    "Authorization": `Bearer ${user.Token}`
+                  }
+                })
+                .then(function(response) {
+                  if (response.status == 200) {
+                    return response.json();
+                  }
+                })
+                .then(function(response) {
+                  if (checkResponse(response)) {
+                    if (append) {
+                      app.articles = app.articles.concat(response.Data);
+                    }
+                    else {
+                      app.articles = response.Data;
+                    }
+                    var unreadCount = response.Data.filter(a => !a.Read).length;
+                    var msg = '';
+                    if (unreadCount > 0) {
+                      msg = `已加载${unreadCount}篇未读文章`;
+                    }
+                    else {
+                      msg = `已加载${response.Data.length}篇已读文章`;
+                    }
+                    app.$message(msg);
+                  }
+                });
+              },
+              getArticles: function(id) {
+                app.feedId = id;
+                var feed = app.feeds.find(f => f.Id == id);
+                app.feedTitle = feed.Title;
+                this.loadArticles(id);
+              },
+              readArticle: function(id) {
+                var article = app.articles.find(a => a.Id == id);
+                readArticles([id]);
+                window.open(article.Url, '_blank');
+              },
+              readAndLoad: function() {
+                readArticles(app.articles.map(a => a.Id));
+                loadArticles(app.feedId, app.articles[app.articles.length - 1].Published)
+              },
+              loadMore: function() {
+                if (app.articles.length > 0) {
+                  loadArticles(app.feedId, app.articles[app.articles.length - 1].Published, true);
+                }
+              },
+              exportOpml: function() {
+                window.open(`./grains/${user.Id}/rss/opml`, '_blank');
+              },
+              toSettings: function() {
+                window.location.href = "./settings.html";
+              },
+              logout: function() {
+                window.localStorage.removeItem("user");
+                window.location.href = "./login.html";
+              },
+              unsubscribe: function() {
+                if (!app.feedId) {
+                  return;
+                }
+
+                fetch(`./grains/${user.Id}/rss/unsubscribe`, {
+                  body: JSON.stringify([app.feedId]),
+                  method: "POST",
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    "Authorization": `Bearer ${user.Token}`
+                  }
+                })
+                .then(function(response) {
+                  if (response.status == 200) {
+                    return response.json();
+                  }
+                })
+                .then(function(response) {
+                  if (checkResponse(response)) {
+                    app.$message("取消订阅成功");
+                    app.feeds = app.feeds.filter(f => f.Id != app.feedId);
+                  }
+                });
+              }
+            }
+          })
+        </script>
+    </body>
+</html>

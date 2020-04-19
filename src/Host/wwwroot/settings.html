@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Resader</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    </head>
+
+    <body>
+      <div id="app">
+        <el-container>
+            <el-header height="100px"></el-header>
+            <el-main>
+              <el-row :gutter="20">
+                <el-col :span="8" :offset="8">
+                  <el-form :label-position="right" label-width="80px" :model="resetForm">
+                    <el-form-item label="原密码">
+                      <el-input type="password" v-model="resetForm.password"></el-input>
+                    </el-form-item>
+                    <el-form-item label="新密码">
+                      <el-input type="password" v-model="resetForm.newPwd"></el-input>
+                    </el-form-item>
+                    <el-form-item label="确认密码">
+                      <el-input type="password" v-model="resetForm.cfmNewPwd"></el-input>
+                    </el-form-item>
+                    <el-form-item>
+                      <el-button type="primary" @click="resetPassword">重置密码</el-button>
+                    </el-form-item>
+                  </el-form>
+                </el-col>
+              </el-row>
+            </el-main>
+        </el-container>
+      </div>
+      
+      <script src="https://unpkg.com/vue/dist/vue.js"></script>
+      <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+      <script src="./js/site.js"></script>
+      <script src="./js/md5.min.js"></script>
+      <script>
+        var user = localStorage.getItem("user");
+        if (!user) {
+          window.location.href = "./login.html";
+        }
+        user = JSON.parse(user);
+
+        var app = new Vue({
+          el: '#app',
+          data: function() {
+            return {
+              resetForm: {
+                newPwd: '',
+                password: '',
+                cfmNewPwd: ''
+              }
+            };
+          },
+          methods: {
+            resetPassword: function() {
+              if (!app.resetForm.password) {
+                this.$message("请输入原密码");
+                return;
+              }
+              if (!app.resetForm.newPwd) {
+                this.$message("请输入新密码");
+                return;
+              }
+              if (!app.resetForm.cfmNewPwd) {
+                this.$message("请确认新密码");
+                return;
+              }
+              if (app.resetForm.newPwd == app.resetForm.password) {
+                this.$message("新密码不能与原密码一致");
+                return;
+              }
+              if (app.resetForm.newPwd != app.resetForm.cfmNewPwd) {
+                this.$message("两次新密码输入不一致");
+                return;
+              }
+
+              fetch(`./grains/${user.Id}/user/resetpassword`, {
+                method: "POST",
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json',
+                  "Authorization": `Bearer ${user.Token}`
+                },
+                body: JSON.stringify({
+                  OldPassword: md5(app.resetForm.password),
+                  Password: md5(app.resetForm.newPwd)
+                })
+              })
+              .then(function(response) {
+                if (response.status == 200) {
+                  return response.json();
+                }
+              })
+              .then(function(response) {
+                if (checkResponse(response)) {
+                  app.$message("密码重置成功");
+                  setTimeout(function() {
+                    window.localStorage.removeItem("user");
+                    window.location.href = "./login.html";
+                  }, 1000)
+                }
+              });
+            }
+          }
+        });
+        </script>
+    </body>
+</html>
