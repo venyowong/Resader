@@ -48,7 +48,7 @@
               <div style="float: right;">
                 <el-button type="danger" round style="margin-right: 10px;" @click="unsubscribe">取消订阅</el-button>
                 <el-switch v-model="ignoreRead" active-color="#13ce66" inactive-color="#dcdfe6" active-text="只展示未读" 
-                  inactive-text="展示全部">
+                  inactive-text="展示全部" @change="setIgnoreRead">
                 </el-switch>
               </div>
               <div>
@@ -119,7 +119,7 @@
                 feedId: "",
                 feedTitle: "",
                 articles: [],
-                ignoreRead: false
+                ignoreRead: window.localStorage.getItem("ignoreRead") == "true"
               };
 
               fetch(`./grains/${user.Id}/rss/feeds`, {
@@ -144,6 +144,9 @@
               return app;
             },
             methods: {
+              setIgnoreRead: function() {
+                window.localStorage.setItem("ignoreRead", String(app.ignoreRead));
+              },
               subscribe: function() {
                 this.$prompt('请输入 RSS 链接', 'Import', {
                   confirmButtonText: '确定',
@@ -222,11 +225,11 @@
               },
               readAndLoad: function() {
                 readArticles(app.articles.map(a => a.Id));
-                loadArticles(app.feedId, app.articles[app.articles.length - 1].Published)
+                this.loadArticles(app.feedId, app.articles[app.articles.length - 1].Published)
               },
               loadMore: function() {
                 if (app.articles.length > 0) {
-                  loadArticles(app.feedId, app.articles[app.articles.length - 1].Published, true);
+                  this.loadArticles(app.feedId, app.articles[app.articles.length - 1].Published, true);
                 }
               },
               exportOpml: function() {
