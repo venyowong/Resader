@@ -6,7 +6,6 @@
 
   <ItemGroup>
     <PackageReference Include="CodeHollow.FeedReader" Version="1.2.1" />
-    <PackageReference Include="coravel" Version="3.6.1" />
     <PackageReference Include="Dapper" Version="2.0.35" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1.3" />
     <PackageReference Include="Microsoft.Orleans.Clustering.AdoNet" Version="3.1.5" />

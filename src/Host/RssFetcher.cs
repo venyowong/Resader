@@ -6,7 +6,6 @@ using System.ServiceModel.Syndication;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
-using Coravel.Invocable;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MySql.Data.MySqlClient;
@@ -16,7 +15,7 @@ using Resader.Host.Models;
 
 namespace Resader.Host
 {
-    public class RssFetcher : IInvocable
+    public class RssFetcher
     {
         private ILogger<RssFetcher> logger;
 
@@ -97,27 +96,6 @@ namespace Resader.Host
             }
 
             return null;
-        }
-
-        public Task Invoke()
-        {
-            this.logger.LogInformation("fetching rss...");
-            
-            var feeds = this.connection.GetFeeds();
-            if (feeds != null && feeds.Any())
-            {
-                var tasks = new List<Task>();
-                foreach(var feed in feeds)
-                {
-                    tasks.Add(Task.Run(() =>
-                    {
-                        this.Fetch(feed.Url);
-                    }));
-                }
-                Task.WaitAll(tasks.ToArray(), new TimeSpan(0, 1, 0));
-            }
-
-            return Task.CompletedTask;
         }
 
         public List<Resader.Host.Models.Article> ParseArticles(SyndicationFeed sf, string feedId)

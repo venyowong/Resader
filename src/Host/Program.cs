@@ -55,6 +55,7 @@ namespace Resader.Host
                     {
                         parts.AddApplicationPart(typeof(UserGrain).Assembly)
                             .AddApplicationPart(typeof(RssGrain).Assembly)
+                            .AddApplicationPart(typeof(FetcherGrain).Assembly)
                             .WithReferences();
                     })
                     .ConfigureEndpoints(siloPort: 7854, gatewayPort: 5489);

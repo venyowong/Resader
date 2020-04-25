@@ -1,12 +1,5 @@
-using System;
-using System.ComponentModel;
 using System.Data;
-using System.Linq;
-using System.Reflection;
 using System.Text;
-using Coravel;
-using Coravel.Scheduling.Schedule.Interfaces;
-using Dapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -69,7 +62,6 @@ namespace Resader.Host
 
             services.AddGrainRouter()
                 .AddJsonMediaType();
-            services.AddScheduler();
             services.AddCors(o => o.AddPolicy("Default", builder =>
             {
                 builder.AllowAnyOrigin()
@@ -79,8 +71,7 @@ namespace Resader.Host
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory, 
-            ILogger<IScheduler> schedulerLogger)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
         {
             if (env.IsDevelopment())
             {
@@ -94,23 +85,6 @@ namespace Resader.Host
             };
             
             loggerFactory.AddProvider(new LoggerProvider());
-
-            var provider = app.ApplicationServices;
-            provider.UseScheduler(scheduler =>
-            {
-                scheduler.Schedule<RssFetcher>()
-                    .EveryFiveMinutes()
-                    .PreventOverlapping("RssFetcher");
-            })
-            .LogScheduledTaskProgress(schedulerLogger)
-            .OnError(e =>
-            {
-                var logger = NiologManager.CreateLogger();
-                logger.Warn()
-                    .Message("Something goes wrong...")
-                    .Exception(e, true)
-                    .Write();
-            });
 
             var defaultFile = new DefaultFilesOptions();  
             defaultFile.DefaultFileNames.Clear();  
@@ -130,6 +104,7 @@ namespace Resader.Host
             app.UseRouteGrainProviders(rgppb =>
             {
                 rgppb.RegisterRouteGrainProvider<RandomRouteGrainProvider>(nameof(RandomRouteGrainProvider));
+                rgppb.RegisterRouteGrainProvider<FixedRouteGrainProvider>(nameof(FixedRouteGrainProvider));
             });
 
             Utility.MakeDapperMapping("Resader.Host.Models");
