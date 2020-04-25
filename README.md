@@ -21,4 +21,5 @@ Resader 是一个 RSS 阅读器，程序包含了 web 前端页面和服务端�
     sudo ./Host
     ```
 5. 打开浏览器访问 http://localhost:9090 或第三步配置的链接
-6. 添加 crontab 配置 `* */5 * * * curl -X post -H 'Accept: application/json' http://localhost:9090/grains/fetcher/fetch`
+6. 创建 ~/resader_fetch.sh 文件，加入以下命令 `curl -X post -H 'Accept: application/json' http://localhost:9090/grains/fetcher/fetch`
+7. 添加 crontab 配置 `* */5 * * * sh ~/resader_fetch.sh`
