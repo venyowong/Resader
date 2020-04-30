@@ -714,3 +714,5 @@ CREATE TABLE readrecord(
     create_time DATETIME NOT NULL,
     update_time DATETIME NOT NULL
 );
+
+ALTER TABLE readrecord ADD UNIQUE INDEX(article_id, user_id);

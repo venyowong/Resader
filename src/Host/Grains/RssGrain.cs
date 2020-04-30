@@ -96,6 +96,12 @@ namespace Resader.Host.Grains
                 return 1.ToResult(string.Empty);
             }
 
+            var readRecords = this.connection.GetReadRecords(this.GetPrimaryKeyString(), articles);
+            if (readRecords != null)
+            {
+                articles = articles.Where(id => !readRecords.Any(record => record.ArticleId == id)).ToList();
+            }
+
             if (this.connection.InsertReadRecords(articles.Select(article => new ReadRecord
             {
                 ArticleId = article,
