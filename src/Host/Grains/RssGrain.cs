@@ -158,7 +158,7 @@ namespace Resader.Host.Grains
                         return false;
                     }
 
-                    if (this.connection.GetReadRecords(this.GetPrimaryKeyString(), new string[]{item.Value.Id}) != null)
+                    if (this.connection.GetReadRecords(this.GetPrimaryKeyString(), new string[]{item.Value.Id})?.Any() ?? false)
                     {
                         return false;
                     }

@@ -192,7 +192,7 @@ namespace Resader.Host.Daos
                 return null;
             }
 
-            return connection.QueryFirstOrDefault<Article>("select a.id from article a where a.feed_id=@feedId order by a.published desc limit 1;", new {feedId});
+            return connection.QueryFirstOrDefault<Article>("select * from article a where a.feed_id=@feedId order by a.published desc limit 1;", new {feedId});
         }
     }
 }

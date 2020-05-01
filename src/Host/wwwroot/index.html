@@ -23,7 +23,10 @@
                         <span>RSS</span>
                     </template>
                     <el-menu-item v-bind:id="feed.Id" v-for="feed in feeds" @click="getArticles(feed.Id)">
-                      {{feed.Title}}
+                      <el-badge value="new" class="item" v-if="feed.active">
+                        {{feed.Title}}
+                      </el-badge>
+                      <div v-else>{{feed.Title}}</div>
                     </el-menu-item>
                 </el-submenu>
                 <el-menu-item index="3" @click="subscribe">
@@ -111,6 +114,34 @@
             });
           }
 
+          function getActiveFeeds() {
+            if (app.feeds.length > 0) {
+              fetch(`./grains/${user.Id}/rss/activeFeeds`, {
+                method: "GET",
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json',
+                  "Authorization": `Bearer ${user.Token}`
+                }
+              })
+              .then(function(response) {
+                if (response.status == 200) {
+                  return response.json();
+                }
+              })
+              .then(function(response) {
+                if (checkResponse(response)) {
+                  app.feeds.forEach(feed => {
+                    feed.active = response.Data.find(item => item == feed.Id) != null;
+                  });
+                  app.reload();
+                }
+              });
+            }
+
+            setTimeout(app.getActiveFeeds, 5000 * 60);
+          }
+
           var app = new Vue({
             el: '#app',
             data: function() {
@@ -138,6 +169,7 @@
               .then(function(response) {
                 if (checkResponse(response)) {
                   app.feeds = response.Data;
+                  getActiveFeeds();
                 }
               });
 
@@ -215,6 +247,7 @@
               getArticles: function(id) {
                 app.feedId = id;
                 var feed = app.feeds.find(f => f.Id == id);
+                feed.active = false;
                 app.feedTitle = feed.Title;
                 this.loadArticles(id);
               },
@@ -267,9 +300,12 @@
                     app.feeds = app.feeds.filter(f => f.Id != app.feedId);
                   }
                 });
+              },
+              reload: function() {
+                this.$forceUpdate();
               }
             }
-          })
+          });
         </script>
     </body>
 </html>
