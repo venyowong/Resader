@@ -31,5 +31,9 @@ namespace Resader.Grains
 
         [HttpGet("{grainId}/rss/opml.xml")]
         Task<string> GetOpml();
+
+        [Authorize]
+        [HttpGet("{grainId}/rss/activeFeeds")]
+        Task<Result<List<string>>> GetActiveFeeds();
     }
 }

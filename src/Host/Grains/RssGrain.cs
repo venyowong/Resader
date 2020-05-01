@@ -147,6 +147,29 @@ namespace Resader.Host.Grains
             }
         }
 
+        public Task<Result<List<string>>> GetActiveFeeds()
+        {
+            return this.connection.GetSubscriptions(this.GetPrimaryKeyString())
+                ?.ToDictionary(item => item.FeedId, item => this.connection.GetLastestArticle(item.FeedId))
+                .Where(item => 
+                {
+                    if (item.Value == null)
+                    {
+                        return false;
+                    }
+
+                    if (this.connection.GetReadRecords(this.GetPrimaryKeyString(), new string[]{item.Value.Id}) != null)
+                    {
+                        return false;
+                    }
+
+                    return true;
+                })
+                .Select(item => item.Key)
+                .ToList()
+                .ToResult();
+        }
+
         private FeedOverview SubscribeFeed(string feed, string userId)
         {
             var result = this.fetcher.Fetch(feed, 5);

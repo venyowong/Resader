@@ -691,6 +691,8 @@ CREATE TABLE article(
     update_time DATETIME NOT NULL
 );
 
+ALTER TABLE article ADD INDEX feed_id_index(feed_id);
+
 CREATE TABLE subscription(
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id VARCHAR(50) NOT NULL,
@@ -698,6 +700,8 @@ CREATE TABLE subscription(
     create_time DATETIME NOT NULL,
     update_time DATETIME NOT NULL
 );
+
+ALTER TABLE subscription ADD INDEX user_id_index(user_id);
 
 CREATE TABLE user(
     id VARCHAR(50) NOT NULL PRIMARY KEY,
@@ -715,4 +719,4 @@ CREATE TABLE readrecord(
     update_time DATETIME NOT NULL
 );
 
-ALTER TABLE readrecord ADD UNIQUE INDEX(article_id, user_id);
+ALTER TABLE readrecord ADD UNIQUE unique_index(user_id, article_id);

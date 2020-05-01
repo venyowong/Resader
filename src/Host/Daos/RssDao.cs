@@ -45,32 +45,6 @@ namespace Resader.Host.Daos
             });
         }
 
-        public static IEnumerable<Article> GetUnreadArticles(this IDbConnection connection, string feedId, 
-            int skip, int take, DateTime endTime)
-        {
-            if (connection == null || string.IsNullOrWhiteSpace(feedId))
-            {
-                return null;
-            }
-
-            var sql = string.Empty;
-            if (endTime != default)
-            {
-                sql = "SELECT * FROM article WHERE feed_id=@FeedId AND published<@EndTime ORDER BY published DESC LIMIT @Skip,@Take";
-            }
-            else
-            {
-                sql = "SELECT * FROM article WHERE feed_id=@FeedId ORDER BY published DESC LIMIT @Skip,@Take";
-            }
-            return connection.Query<Article>(sql, new
-            {
-                FeedId = feedId,
-                Skip = skip,
-                Take = take,
-                EndTime = endTime
-            });
-        }
-
         public static int InsertArticle(this IDbConnection connection, Article article)
         {
             if (connection == null || article == null)
@@ -125,6 +99,16 @@ namespace Resader.Host.Daos
             return connection.Execute("INSERT INTO feed(id, url, title, create_time, update_time) VALUES(@Id, @Url, @Title, now(), now())", feed);
         }
 
+        public static IEnumerable<Subscription> GetSubscriptions(this IDbConnection connection, string userId)
+        {
+            if (connection == null || string.IsNullOrWhiteSpace(userId))
+            {
+                return null;
+            }
+
+            return connection.Query<Subscription>("SELECT * FROM subscription WHERE user_id=@userId", new { userId });
+        }
+
         public static Subscription GetSubscription(this IDbConnection connection, string userId, string feedId)
         {
             if (connection == null || string.IsNullOrWhiteSpace(feedId) || string.IsNullOrWhiteSpace(userId))
@@ -133,7 +117,7 @@ namespace Resader.Host.Daos
             }
 
             return connection.QueryFirstOrDefault<Subscription>(
-                "SELECT * FROM subscription WHERE feed_id=@FeedId AND user_id=@UserId", new { FeedId = feedId, UserId = userId });
+                "SELECT * FROM subscription WHERE user_id=@UserId AND feed_id=@FeedId", new { FeedId = feedId, UserId = userId });
         }
 
         public static int InsertSubscription(this IDbConnection connection, Subscription subscription)
@@ -199,6 +183,16 @@ namespace Resader.Host.Daos
             }
             
             return connection.Query<Feed>("SELECT * FROM feed");
+        }
+
+        public static Article GetLastestArticle(this IDbConnection connection, string feedId)
+        {
+            if (connection == null || string.IsNullOrWhiteSpace(feedId))
+            {
+                return null;
+            }
+
+            return connection.QueryFirstOrDefault<Article>("select a.id from article a where a.feed_id=@feedId order by a.published desc limit 1;", new {feedId});
         }
     }
 }
