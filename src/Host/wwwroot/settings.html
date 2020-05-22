@@ -96,6 +96,9 @@
                 if (response.status == 200) {
                   return response.json();
                 }
+                if (response.status == 401) {
+                  app.logout();
+                }
               })
               .then(function(response) {
                 if (checkResponse(response)) {
@@ -107,6 +110,10 @@
                 }
               });
             }
+          },
+          logout: function() {
+            window.localStorage.removeItem("user");
+            window.location.href = "./login.html";
           }
         });
         </script>

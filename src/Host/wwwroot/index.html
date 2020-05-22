@@ -103,6 +103,9 @@
               if (response.status == 200) {
                 return response.json();
               }
+              if (response.status == 401) {
+                app.logout();
+              }
             })
             .then(function(response) {
               if (checkResponse(response)) {
@@ -127,6 +130,9 @@
               .then(function(response) {
                 if (response.status == 200) {
                   return response.json();
+                }
+                if (response.status == 401) {
+                  app.logout();
                 }
               })
               .then(function(response) {
@@ -165,6 +171,10 @@
                 if (response.status == 200) {
                   return response.json();
                 }
+                if (response.status == 401) {
+                  window.localStorage.removeItem("user");
+                  window.location.href = "./login.html";
+                }
               })
               .then(function(response) {
                 if (checkResponse(response)) {
@@ -197,6 +207,9 @@
                     if (response.status == 200) {
                       return response.json();
                     }
+                    if (response.status == 401) {
+                      app.logout();
+                    }
                   })
                   .then(function(response) {
                     if (checkResponse(response)) {
@@ -222,6 +235,9 @@
                 .then(function(response) {
                   if (response.status == 200) {
                     return response.json();
+                  }
+                  if (response.status == 401) {
+                    app.logout();
                   }
                 })
                 .then(function(response) {
@@ -292,6 +308,9 @@
                 .then(function(response) {
                   if (response.status == 200) {
                     return response.json();
+                  }
+                  if (response.status == 401) {
+                    app.logout();
                   }
                 })
                 .then(function(response) {
