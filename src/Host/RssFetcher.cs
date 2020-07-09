@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Net.Http;
 using System.ServiceModel.Syndication;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,22 +13,23 @@ using MySql.Data.MySqlClient;
 using Resader.Grains.Models;
 using Resader.Host.Daos;
 using Resader.Host.Models;
+using Serilog;
 
 namespace Resader.Host
 {
     public class RssFetcher
     {
-        private ILogger<RssFetcher> logger;
-
         private IDbConnection connection;
 
         private Configuration configuration;
 
-        public RssFetcher(ILogger<RssFetcher> logger, IDbConnection connection, IOptions<Configuration> config)
+        private HttpClient httpClient;
+
+        public RssFetcher(IDbConnection connection, IOptions<Configuration> config, HttpClient httpClient)
         {
-            this.logger = logger;
             this.connection = connection;
             this.configuration = config.Value;
+            this.httpClient = httpClient;
         }
 
         public FeedOverview Fetch(string feed, int seconds)
@@ -55,17 +57,18 @@ namespace Resader.Host
                 CodeHollow.FeedReader.Feed cfeed = null;
                 try 
                 {
-                    sf = SyndicationFeed.Load(XmlReader.Create(feed));
-                    title = sf?.Title?.Text;
+                    var html = this.httpClient.GetStringAsync(feed).Result;
+                    cfeed = CodeHollow.FeedReader.FeedReader.ReadFromString(html);
+                    title = cfeed?.Title;
                 }
                 catch
                 {
-                    cfeed = CodeHollow.FeedReader.FeedReader.ReadAsync(feed).Result;
-                    title = cfeed?.Title;
+                    sf = SyndicationFeed.Load(XmlReader.Create(feed));
+                    title = sf?.Title?.Text;
                 }
                 if (string.IsNullOrWhiteSpace(title))
                 {
-                    this.logger.LogWarning($"The title of feed({feed}) is null or white space.");
+                    Log.Warning($"The title of feed({feed}) is null or white space.");
                     return null;
                 }
 
@@ -92,7 +95,7 @@ namespace Resader.Host
             }
             catch (Exception e)
             {
-                this.logger.LogError(e, $"failed to add {feed}");
+                Log.Error(e, $"failed to add {feed}");
             }
 
             return null;
@@ -102,7 +105,7 @@ namespace Resader.Host
         {
             if (sf == null || sf.Items == null || !sf.Items.Any())
             {
-                this.logger.LogWarning("SyndicationFeed is empty, so no articles.");
+                Log.Warning("SyndicationFeed is empty, so no articles.");
                 return null;
             }
 
@@ -155,7 +158,7 @@ namespace Resader.Host
                 }
                 catch(Exception e)
                 {
-                    this.logger.LogError(e, $"error occured when insert {articleUrl}");
+                    Log.Error(e, $"error occured when insert {articleUrl}");
                 }
             }
 
@@ -166,7 +169,7 @@ namespace Resader.Host
         {
             if (feed == null || feed.Items == null || !feed.Items.Any())
             {
-                this.logger.LogWarning("Feed is empty, so no articles.");
+                Log.Warning("Feed is empty, so no articles.");
                 return null;
             }
 
@@ -214,7 +217,7 @@ namespace Resader.Host
                 }
                 catch(Exception e)
                 {
-                    this.logger.LogError(e, $"error occured when insert {articleUrl}");
+                    Log.Error(e, $"error occured when insert {articleUrl}");
                 }
             }
 

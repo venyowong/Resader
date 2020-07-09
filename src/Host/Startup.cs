@@ -1,4 +1,7 @@
+using System;
 using System.Data;
+using System.IO;
+using System.Net.Http;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -10,10 +13,10 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using MySql.Data.MySqlClient;
-using Niolog;
-using Niolog.Interfaces;
 using Orleans.Http;
 using Resader.Grains;
+using Serilog;
+using Serilog.Events;
 
 namespace Resader.Host
 {
@@ -39,6 +42,14 @@ namespace Resader.Host
             {
                 var connection = new MySqlConnection(this.Configuration["MySql:ConnectionString"]);
                 return connection;
+            });
+            services.AddSingleton<HttpClient>(_ =>
+            {
+                var handler = new HttpClientHandler();
+                handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
+                var client = new HttpClient(handler);
+                client.Timeout = new TimeSpan(0, 0, 10);
+                return client;
             });
 
             services.AddAuthentication(opt =>
@@ -71,20 +82,35 @@ namespace Resader.Host
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
 
-            NiologManager.DefaultWriters = new ILogWriter[]
-            {
-                new ConsoleLogWriter(),
-                new FileLogWriter(this.Configuration["Niolog:File"], 10)
-            };
-            
-            loggerFactory.AddProvider(new LoggerProvider());
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Information()
+                .WriteTo.Console()
+                .WriteTo.Logger(lc =>
+                {
+                    lc.WriteTo
+                        .RollingFile(Path.Combine(this.Configuration["Serilog:BaseFilePath"], "logs/info/{Hour}.txt"))
+                        .Filter.ByIncludingOnly(@e => @e.Level == LogEventLevel.Information);
+                })
+                .WriteTo.Logger(lc =>
+                {
+                    lc.WriteTo
+                        .RollingFile(Path.Combine(this.Configuration["Serilog:BaseFilePath"], "logs/warn/{Hour}.txt"))
+                        .Filter.ByIncludingOnly(@e => @e.Level == LogEventLevel.Warning);
+                })
+                .WriteTo.Logger(lc =>
+                {
+                    lc.WriteTo
+                        .RollingFile(Path.Combine(this.Configuration["Serilog:BaseFilePath"], "logs/error/{Hour}.txt"))
+                        .Filter.ByIncludingOnly(@e => @e.Level == LogEventLevel.Error);
+                })
+                .CreateLogger();
 
             var defaultFile = new DefaultFilesOptions();  
             defaultFile.DefaultFileNames.Clear();  

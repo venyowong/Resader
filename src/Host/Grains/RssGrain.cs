@@ -20,13 +20,10 @@ namespace Resader.Host.Grains
 
         private RssFetcher fetcher;
 
-        private ILogger<RssGrain> logger;
-
-        public RssGrain(IDbConnection connection, RssFetcher fetcher, ILogger<RssGrain> logger)
+        public RssGrain(IDbConnection connection, RssFetcher fetcher)
         {
             this.connection = connection;
             this.fetcher = fetcher;
-            this.logger = logger;
         }
 
         public Task<Result<List<Resader.Grains.Models.Article>>> GetArticles([FromQuery] string feedId, [FromQuery] int page, 
