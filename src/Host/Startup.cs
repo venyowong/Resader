@@ -48,7 +48,8 @@ namespace Resader.Host
                 var handler = new HttpClientHandler();
                 handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
                 var client = new HttpClient(handler);
-                client.Timeout = new TimeSpan(0, 0, 10);
+                client.Timeout = new TimeSpan(0, 0, 30);
+                client.DefaultRequestHeaders.Add("user-agent", "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.2; WOW64; Trident/6.0)");
                 return client;
             });
 
