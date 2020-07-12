@@ -169,18 +169,19 @@ namespace Resader.Host.Grains
 
         private FeedOverview SubscribeFeed(string feed, string userId)
         {
-            var result = this.fetcher.Fetch(feed, 5);
-            if (result == default)
-            {
-                return result;
-            }
+            FeedOverview result = null;
 
             #region 插入 feed
             var feedId = feed.GetMd5Hash();
-            result.Id = feedId;
             var feedEntity = this.connection.GetFeed(feedId);
             if (feedEntity == null)
             {
+                result = this.fetcher.Fetch(feed, 30);
+                if (result == default)
+                {
+                    return result;
+                }
+
                 feedEntity = new Resader.Host.Models.Feed
                 {
                     Id = feedId,
@@ -189,6 +190,17 @@ namespace Resader.Host.Grains
                 };
                 this.connection.InsertFeed(feedEntity);
             }
+            else
+            {
+                result = new FeedOverview
+                {
+                    Title = feedEntity.Title,
+                    Articles = this.connection.GetArticles(feedId, 0, 10, DateTime.Now)
+                        ?.Select(a => a.ToResponseModel())
+                        .ToList()
+                };
+            }
+            result.Id = feedId;
             #endregion
 
             #region 订阅
