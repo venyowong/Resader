@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
@@ -116,6 +118,42 @@ namespace Resader.Host.Grains
 
                 return default(User).ToResult(2);
             }
+        }
+
+        public Task<Result<User>> ValidateToken([FromQuery] string token)
+        {
+            var validator = new JwtSecurityTokenHandler();
+
+            // These need to match the values used to generate the token
+            TokenValidationParameters validationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(this.config?.Jwt?.Secret)),
+                ValidateIssuer = false,
+                ValidateAudience = false
+            };
+
+            if (validator.CanReadToken(token))
+            {
+                try
+                {
+                    var principal = validator.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
+                    if (validatedToken?.ValidFrom <= DateTime.Now && validatedToken?.ValidTo >= DateTime.Now)
+                    {
+                        if (principal?.Claims != null && principal.Claims.Any())
+                        {
+                            return new User
+                            {
+                                Id = principal.Claims.FirstOrDefault(item => item.Type == ClaimTypes.Sid)?.Value,
+                                Mail = principal.Claims.FirstOrDefault(item => item.Type == ClaimTypes.Email)?.Value
+                            }.ToResult();
+                        }
+                    }
+                }
+                catch {}
+            }
+
+            return default(User).ToResult(-1);
         }
 
         private User GetToken(User user)
