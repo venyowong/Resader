@@ -32,5 +32,7 @@ namespace Resader.Grains
         [Authorize]
         [HttpPost("{grainId}/user/resetpassword")]
         Task<Result> ResetPassword([FromBody] ResetPasswordRequest request);
+
+        Task<Result<User>> ValidateToken([FromQuery] string token);
     }
 }
