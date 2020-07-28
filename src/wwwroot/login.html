@@ -1,0 +1,137 @@
+﻿<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Resader</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <link rel="stylesheet" href="./libs/element/index.css">
+    </head>
+
+    <body>
+        <div id="app">
+            <el-container>
+                <el-header height="100px"></el-header>
+                <el-main>
+                    <el-row :gutter="20">
+                        <el-col :span="8" :offset="8">
+                            <el-form :label-position="right" label-width="80px" :model="loginForm">
+                                <el-form-item label="邮箱">
+                                    <el-input v-model="loginForm.mail"></el-input>
+                                </el-form-item>
+                                <el-form-item label="密码">
+                                    <el-input type="password" v-model="loginForm.password"></el-input>
+                                </el-form-item>
+                                <el-form-item>
+                                    <el-button type="primary" @click="login">登录</el-button>
+                                    <el-button @click="signup">注册</el-button>
+                                </el-form-item>
+                            </el-form>
+                        </el-col>
+                    </el-row>
+                </el-main>
+            </el-container>
+        </div>
+
+        <script src="./libs/vue.js"></script>
+        <script src="./libs/element/index.js"></script>
+        <script src="./js/site.js"></script>
+        <script src="./js/md5.min.js"></script>
+        <script>
+            var user = localStorage.getItem("user");
+            if (user) {
+                window.location.href = "./index.html";
+            }
+
+            var app = new Vue({
+                el: '#app',
+                data: function () {
+                    return {
+                        loginForm: {
+                            mail: '',
+                            password: ''
+                        }
+                    };
+                },
+                methods: {
+                    login: function () {
+                        if (!app.loginForm.mail) {
+                            this.$message("请输入邮箱");
+                            return;
+                        }
+                        if (!app.loginForm.password) {
+                            this.$message("请输入密码");
+                            return;
+                        }
+
+                        fetch("./user/login", {
+                            body: JSON.stringify({
+                                Mail: app.loginForm.mail,
+                                Password: md5(app.loginForm.password)
+                            }),
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            }
+                        })
+                            .then(function (response) {
+                                if (response.status == 200) {
+                                    return response.json();
+                                }
+                            })
+                            .then(function (response) {
+                                if (checkResponse(response, function (code) {
+                                    switch (code) {
+                                        case 101:
+                                            return "该邮箱尚未注册";
+                                        case 102:
+                                            return "密码错误";
+                                    }
+                                })) {
+                                    window.localStorage.setItem("user", JSON.stringify(response.data));
+                                    window.location.href = "./index.html";
+                                }
+                            });
+                    },
+                    signup: function () {
+                        if (!app.loginForm.mail) {
+                            this.$message("请输入邮箱");
+                            return;
+                        }
+                        if (!app.loginForm.password) {
+                            this.$message("请输入密码");
+                            return;
+                        }
+
+                        fetch("./user/signup", {
+                            body: JSON.stringify({
+                                Mail: app.loginForm.mail,
+                                Password: md5(app.loginForm.password)
+                            }),
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            }
+                        })
+                            .then(function (response) {
+                                if (response.status == 200) {
+                                    return response.json();
+                                }
+                            })
+                            .then(function (response) {
+                                if (checkResponse(response, function (code) {
+                                    switch (code) {
+                                        case 101:
+                                            return "该邮箱已被注册";
+                                    }
+                                })) {
+                                    window.localStorage.setItem("user", JSON.stringify(response.data));
+                                    window.location.href = "./index.html";
+                                }
+                            });
+                    }
+                }
+            });
+        </script>
+    </body>
+</html>

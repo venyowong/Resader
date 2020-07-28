@@ -52,7 +52,7 @@ namespace Resader.Controllers
         [HttpPost("ResetPassword")]
         public async Task<Result> ResetPassword([Required] ResetPasswordRequest request)
         {
-            var user = await this.connection.GetUser(request.UesrId);
+            var user = await this.connection.GetUser(request.UserId);
             if (user == null)
             {
                 return Result.CreateFailureResult(1, "用户不存在");

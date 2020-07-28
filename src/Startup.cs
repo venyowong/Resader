@@ -90,7 +90,7 @@ namespace Resader
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IOptions<Configuration> configuration)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
@@ -98,6 +98,10 @@ namespace Resader
             }
             app.UseOpenApi();
             app.UseSwaggerUi3();
+            var options = new DefaultFilesOptions();
+            options.DefaultFileNames.Clear();
+            options.DefaultFileNames.Add("index.html");
+            app.UseDefaultFiles(options);
             app.UseStaticFiles();
 
             app.UseMiddleware<LogMiddleware>();

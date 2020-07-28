@@ -11,6 +11,6 @@ namespace Resader.Models.Request
         public string Password{get;set;}
 
         [Required]
-        public string UesrId{get;set;}
+        public string UserId{get;set;}
     }
 }

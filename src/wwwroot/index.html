@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <title>Resader</title>
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        <link rel="stylesheet" href="./element/index.css">
+        <link rel="stylesheet" href="./libs/element/index.css">
     </head>
 
     <body>
@@ -22,11 +22,11 @@
                         <i class="el-icon-document"></i>
                         <span>RSS</span>
                     </template>
-                    <el-menu-item v-bind:id="feed.Id" v-for="feed in feeds" @click="getArticles(feed.Id)">
+                    <el-menu-item v-bind:id="feed.id" v-for="feed in feeds" @click="getArticles(feed.id)">
                       <el-badge value="new" class="item" v-if="feed.active">
-                        {{feed.Title}}
+                        {{feed.title}}
                       </el-badge>
-                      <div v-else>{{feed.Title}}</div>
+                      <div v-else>{{feed.title}}</div>
                     </el-menu-item>
                 </el-submenu>
                 <el-menu-item index="3" @click="subscribe">
@@ -59,17 +59,17 @@
                   {{feedTitle}}
                 </h3>
               </div>
-              <div style="padding-bottom: 26px;" v-for="article in articles" v-if="!ignoreRead || !article.Read">
+              <div style="padding-bottom: 26px;" v-for="article in articles" v-if="!ignoreRead || !article.read">
                 <div>
-                  <el-link :underline="false" @click="readArticle(article.Id)">
+                  <el-link :underline="false" @click="readArticle(article.id)">
                     <h3>
-                      <font v-if="!article.Read">{{article.Title}}</font>
-                      <font color="#808080" v-else>{{article.Title}}</font>
+                      <font v-if="!article.read">{{article.title}}</font>
+                      <font color="#808080" v-else>{{article.title}}</font>
                     </h3>
                   </el-link>
                 </div>
-                <p><font color="#808080">{{article.Summary}}</font></p> 
-                <div><font color="#808080">{{article.Published}}</font></div>
+                <p><font color="#808080">{{article.summary}}</font></p> 
+                <div><font color="#808080">{{article.published}}</font></div>
               </div>
               <el-row v-if="articles != null && articles.length > 0">
                 <el-button @click="readAndLoad">以上标记为已读，并加载更多</el-button>
@@ -79,8 +79,8 @@
           </el-container>
         </div>
         
-        <script src="./vue.js"></script>
-        <script src="./element/index.js"></script>
+        <script src="./libs/vue.js"></script>
+        <script src="./libs/element/index.js"></script>
         <script src="./js/site.js"></script>
         <script>
           var user = localStorage.getItem("user");
@@ -90,13 +90,15 @@
           user = JSON.parse(user);
 
           function readArticles(ids) {
-            fetch(`./grains/${user.Id}/article/read`, {
+            fetch(`./rss/read`, {
               method: "POST",
-              body: JSON.stringify(ids),
+                body: JSON.stringify({
+                    UserId: user.id,
+                    Articles: ids
+                }),
               headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                "Authorization": `Bearer ${user.Token}`
+                  "Authorization": `Bearer ${user.token}`,
+                  "Content-Type": "application/json"
               }
             })
             .then(function(response) {
@@ -110,8 +112,8 @@
             .then(function(response) {
               if (checkResponse(response)) {
                 for (var i = 0; i < ids.length; i++) {
-                  var article = app.articles.find(a => a.Id == ids[i]);
-                  article.Read = true;
+                  var article = app.articles.find(a => a.id == ids[i]);
+                  article.read = true;
                 }
               }
             });
@@ -119,12 +121,10 @@
 
           function getActiveFeeds() {
             if (app.feeds.length > 0) {
-              fetch(`./grains/${user.Id}/rss/activeFeeds`, {
+              fetch(`./rss/activefeeds?userId=${user.id}`, {
                 method: "GET",
                 headers: {
-                  'Content-Type': 'application/json',
-                  'Accept': 'application/json',
-                  "Authorization": `Bearer ${user.Token}`
+                  "Authorization": `Bearer ${user.token}`
                 }
               })
               .then(function(response) {
@@ -138,7 +138,7 @@
               .then(function(response) {
                 if (checkResponse(response)) {
                   app.feeds.forEach(feed => {
-                    feed.active = response.Data.find(item => item == feed.Id) != null;
+                    feed.active = response.data.find(item => item == feed.id) != null;
                   });
                   app.reload();
                 }
@@ -159,12 +159,10 @@
                 ignoreRead: window.localStorage.getItem("ignoreRead") == "true"
               };
 
-              fetch(`./grains/${user.Id}/rss/feeds`, {
+                fetch(`./rss/feeds?userId=${user.id}`, {
                 method: "GET",
                 headers: {
-                  'Content-Type': 'application/json',
-                  'Accept': 'application/json',
-                  "Authorization": `Bearer ${user.Token}`
+                  "Authorization": `Bearer ${user.token}`
                 }
               })
               .then(function(response) {
@@ -178,7 +176,7 @@
               })
               .then(function(response) {
                 if (checkResponse(response)) {
-                  app.feeds = response.Data;
+                  app.feeds = response.data;
                   getActiveFeeds();
                 }
               });
@@ -194,13 +192,15 @@
                   confirmButtonText: '确定',
                   cancelButtonText: '取消'
                 }).then(({ value }) => {
-                  fetch(`./grains/${user.Id}/rss/subscribe`, {
-                    body: JSON.stringify([value]),
+                  fetch(`./rss/subscribe`, {
+                      body: JSON.stringify({
+                          UserId: user.id,
+                          Feeds: [value]
+                      }),
                     method: "POST",
                     headers: {
-                      'Content-Type': 'application/json',
-                      'Accept': 'application/json',
-                      "Authorization": `Bearer ${user.Token}`
+                        "Authorization": `Bearer ${user.token}`,
+                        "Content-Type": "application/json"
                     }
                   })
                   .then(function(response) {
@@ -214,22 +214,20 @@
                   .then(function(response) {
                     if (checkResponse(response)) {
                       app.feeds.push({
-                        Id: response.Data[0].Id,
-                        Title: response.Data[0].Title
+                        id: response.data[0].id,
+                        title: response.data[0].title
                       })
-                      app.feedTitle = response.Data[0].Title;
-                      app.articles = response.Data[0].Articles;
+                      app.feedTitle = response.data[0].title;
+                      app.articles = response.data[0].articles;
                     }
                   });
                 });
               },
               loadArticles: function(feedId, endTime, append) {
-                fetch(`./grains/${user.Id}/rss/articles?feedId=${feedId}&page=0&pageCount=30&endTime=${endTime}`, {
+                fetch(`./rss/articles?feedId=${feedId}&page=0&pageCount=30&endTime=${endTime}&userId=${user.id}`, {
                   method: "GET",
                   headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    "Authorization": `Bearer ${user.Token}`
+                    "Authorization": `Bearer ${user.token}`
                   }
                 })
                 .then(function(response) {
@@ -243,18 +241,18 @@
                 .then(function(response) {
                   if (checkResponse(response)) {
                     if (append) {
-                      app.articles = app.articles.concat(response.Data);
+                      app.articles = app.articles.concat(response.data);
                     }
                     else {
-                      app.articles = response.Data;
+                      app.articles = response.data;
                     }
-                    var unreadCount = response.Data.filter(a => !a.Read).length;
+                    var unreadCount = response.data.filter(a => !a.read).length;
                     var msg = '';
                     if (unreadCount > 0) {
                       msg = `已加载${unreadCount}篇未读文章`;
                     }
                     else {
-                      msg = `已加载${response.Data.length}篇已读文章`;
+                      msg = `已加载${response.data.length}篇已读文章`;
                     }
                     app.$message(msg);
                   }
@@ -262,27 +260,27 @@
               },
               getArticles: function(id) {
                 app.feedId = id;
-                var feed = app.feeds.find(f => f.Id == id);
+                var feed = app.feeds.find(f => f.id == id);
                 feed.active = false;
-                app.feedTitle = feed.Title;
+                app.feedTitle = feed.title;
                 this.loadArticles(id);
               },
               readArticle: function(id) {
-                var article = app.articles.find(a => a.Id == id);
+                var article = app.articles.find(a => a.id == id);
                 readArticles([id]);
-                window.open(article.Url, '_blank');
+                window.open(article.url, '_blank');
               },
               readAndLoad: function() {
-                readArticles(app.articles.map(a => a.Id));
-                this.loadArticles(app.feedId, app.articles[app.articles.length - 1].Published)
+                readArticles(app.articles.map(a => a.id));
+                this.loadArticles(app.feedId, app.articles[app.articles.length - 1].published)
               },
               loadMore: function() {
                 if (app.articles.length > 0) {
-                  this.loadArticles(app.feedId, app.articles[app.articles.length - 1].Published, true);
+                  this.loadArticles(app.feedId, app.articles[app.articles.length - 1].published, true);
                 }
               },
               exportOpml: function() {
-                window.open(`./grains/${user.Id}/rss/opml.xml`, '_blank');
+                window.open(`./rss/opml.xml?userId=${user.id}`, '_blank');
               },
               toSettings: function() {
                 window.location.href = "./settings.html";
@@ -296,13 +294,15 @@
                   return;
                 }
 
-                fetch(`./grains/${user.Id}/rss/unsubscribe`, {
-                  body: JSON.stringify([app.feedId]),
+                fetch(`./rss/unsubscribe`, {
+                    body: JSON.stringify({
+                        UserId: user.id,
+                        Feeds: [app.feedId]
+                    }),
                   method: "POST",
                   headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    "Authorization": `Bearer ${user.Token}`
+                      "Authorization": `Bearer ${user.token}`,
+                      "Content-Type": "application/json"
                   }
                 })
                 .then(function(response) {
@@ -316,7 +316,7 @@
                 .then(function(response) {
                   if (checkResponse(response)) {
                     app.$message("取消订阅成功");
-                    app.feeds = app.feeds.filter(f => f.Id != app.feedId);
+                    app.feeds = app.feeds.filter(f => f.id != app.feedId);
                   }
                 });
               },

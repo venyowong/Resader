@@ -4,23 +4,23 @@ function checkResponse(response, codeHandler) {
     return false;
   }
 
-  switch (response.Code) {
+  switch (response.code) {
     case 0:
       return true;
     default:
-      if (response.Message) {
-        app.$message(response.Message);
+      if (response.message) {
+        app.$message(response.message);
       }
       else {
         var msg = '';
         if (codeHandler) {
-          msg = codeHandler(response.Code);
+          msg = codeHandler(response.code);
         }
         if (msg) {
           app.$message(msg);
         }
         else {
-          app.$message(defaultCodeHandler(response.Code));
+          app.$message(defaultCodeHandler(response.code));
         }
       }
       return false;

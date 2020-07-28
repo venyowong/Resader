@@ -31,7 +31,7 @@ namespace Resader.Controllers
 
         [Authorize]
         [HttpGet("Articles")]
-        public async Task<Result<List<ArticleResponse>>> GetArticles([Required] GetArticlesRequest request)
+        public async Task<Result<List<ArticleResponse>>> GetArticles([FromQuery][Required] GetArticlesRequest request)
         {
             DateTime.TryParse(request.EndTime, out DateTime end);
             var articles = (await this.connection.GetArticles(request.FeedId, request.Page * request.PageCount, 
@@ -50,14 +50,13 @@ namespace Resader.Controllers
 
         [Authorize]
         [HttpGet("Feeds")]
-        public async Task<Result<List<Feed>>> GetFeeds([Required] string userId)
+        public async Task<Result<List<Feed>>> GetFeeds([FromQuery][Required] string userId)
         {
             return (await this.connection.GetFeeds(userId))?.ToList().ToResult();
         }
 
-        [Authorize]
         [HttpGet("opml.xml")]
-        public async Task<string> GetOpml([Required] string userId)
+        public async Task<string> GetOpml([FromQuery][Required] string userId)
         {
             var opml = new Opml();
             opml.Encoding = "UTF-8";
@@ -138,7 +137,7 @@ namespace Resader.Controllers
 
         [Authorize]
         [HttpGet("ActiveFeeds")]
-        public async Task<Result<List<string>>> GetActiveFeeds([Required] string userId)
+        public async Task<Result<List<string>>> GetActiveFeeds([FromQuery][Required] string userId)
         {
             var subscriptions = await this.connection.GetSubscriptions(userId);
             if (subscriptions == null || !subscriptions.Any())
@@ -166,6 +165,19 @@ namespace Resader.Controllers
                 }
             }
             return result.ToResult();
+        }
+
+        [HttpGet("Fetch")]
+        public async Task<Result> Fetch()
+        {
+            var feeds = await this.connection.GetFeeds();
+            if (feeds != null && feeds.Any())
+            {
+                var tasks = feeds.Select(feed => this.rssFetcher.Fetch(feed.Url)).ToArray();
+                Task.WaitAll(tasks, new TimeSpan(0, 1, 0));
+            }
+
+            return Result.CreateSuccessResult();
         }
 
         private async Task<FeedOverview> SubscribeFeed(string feed, string userId)
