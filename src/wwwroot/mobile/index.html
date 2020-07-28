@@ -1,0 +1,37 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Resader - Mobile</title>
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <link rel="stylesheet" href="../libs/mint-ui/style.css">
+</head>
+<body>
+    <div id="app">
+        <mt-tab-container v-model="active">
+            <mt-tab-container-item id="home-container">
+                <mt-cell v-for="n in 10" title="tab-container 1" is-link></mt-cell>
+            </mt-tab-container-item>
+            <mt-tab-container-item id="settings-container">
+                <mt-cell v-for="n in 5" title="tab-container 2"></mt-cell>
+            </mt-tab-container-item>
+        </mt-tab-container>
+
+        <mt-tabbar v-model="selected" :fixed="tabbarFixed">
+            <mt-tab-item id="home">
+                <img slot="icon" src="../imgs/home100x100.jpg">
+                Home
+            </mt-tab-item>
+            <mt-tab-item id="settings">
+                <img slot="icon" src="../imgs/settings100x100.jpg">
+                Settings
+            </mt-tab-item>
+        </mt-tabbar>
+    </div>
+
+    <script src="../libs/vue.js"></script>
+    <script src="../libs/mint-ui/index.js"></script>
+    <script src="../js/mobile.js"></script>
+    <script src="../js/mobile/index.js"></script>
+</body>
+</html>

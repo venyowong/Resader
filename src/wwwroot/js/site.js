@@ -37,3 +37,7 @@ function defaultCodeHandler(code) {
       return `请求失败(${code})`;
   }
 }
+
+if (screen.width <= 650) {
+    window.location.href = "./mobile/index.html";
+}
