@@ -5,12 +5,14 @@
     <title>Resader - Mobile</title>
     <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <link rel="stylesheet" href="../libs/mint-ui/style.css">
-    <link rel="stylesheet" href="./css/mobile.css">
+    <link rel="stylesheet" href="../css/mobile.css">
 </head>
 <body>
     <div id="app">
         <mt-tab-container v-model="active" :swipeable="swipeable">
             <mt-tab-container-item id="home-container">
+                <img class="center" v-lazy="logo">
+
                 <mt-cell-swipe v-for="feed in feeds" :title="feed.title"
                 :right="[
                     {
@@ -21,16 +23,20 @@
                 ]" is-link :to="'./articles.html?id=' + feed.id + '&name=' + feed.title"
                 :label="feed.active ? '有新文章未阅读' : ''">
                 </mt-cell-swipe>
-                <mt-button size="large" type="default" @click.native="importRss()">Import</mt-button>
             </mt-tab-container-item>
             <mt-tab-container-item id="settings-container">
-                <mt-cell :title="user.mail"></mt-cell>
+                <mt-header title="Settings">
+                </mt-header>
+
+                <mt-cell title="邮箱" :value="user.mail"></mt-cell>
                 <mt-cell title="Export" :to="'../rss/opml.xml?userId=' + user.id" is-link value="导出 OPML">
                 </mt-cell>
                 <mt-cell title="只展示未读文章">
                     <mt-switch v-model="onlyShowUnread" @change="onReadSwitchChange"></mt-switch>
                 </mt-cell>
-                <mt-button size="large" type="danger" @click.native="logout()">退出登录</mt-button>
+                
+                <mt-button class="bottom-button" size="large" type="default" @click.native="importRss()">Import</mt-button>
+                <mt-button class="bottom-button" size="large" type="default" @click.native="logout()">退出登录</mt-button>
             </mt-tab-container-item>
         </mt-tab-container>
 

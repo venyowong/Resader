@@ -14,7 +14,8 @@ var app = new Vue({
             swipeable: true,
             feeds: [],
             user: user,
-            onlyShowUnread: false
+            onlyShowUnread: false,
+            logo: "../logo.png"
         };
     },
     methods: {

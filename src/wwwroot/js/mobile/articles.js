@@ -15,7 +15,8 @@ var app = new Vue({
             id: id,
             title: name,
             endTime: "",
-            allLoaded: false
+            allLoaded: false,
+            onlyShowUnread: false
         };
     },
     methods: {
@@ -51,11 +52,22 @@ var app = new Vue({
           })
           .then(function(response) {
             if (checkResponse(response)) {
-                if (response.data.length < 30) {
-                    app.allLoaded = true;
+              if (response.data.length > 0) {
+                app.endTime = response.data[response.data.length - 1].published;
+              }
+              if (response.data.length < 30) {
+                  app.allLoaded = true;
+              }
+              if (app.onlyShowUnread && app.articles.length > 0) {
+                response.data = response.data.filter(item => !item.read);
+              }
+              else if (app.onlyShowUnread) {
+                var unreadCount = response.data.filter(a => !a.read).length;
+                if (unreadCount > 0) {
+                  response.data = response.data.filter(item => !item.read);
                 }
-                app.articles = app.articles.concat(response.data);
-                app.endTime = app.articles[app.articles.length - 1].published;
+              }
+              app.articles = app.articles.concat(response.data);
             }
           });
         },
@@ -96,5 +108,8 @@ var app = new Vue({
             }
           });
         }
+    },
+    created() {
+      this.onlyShowUnread = window.localStorage.getItem("onlyShowUnread") == "true";
     }
 });

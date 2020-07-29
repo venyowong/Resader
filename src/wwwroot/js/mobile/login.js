@@ -13,19 +13,27 @@ var app = new Vue({
     },
     methods: {
         login: function () {
-            if (!app.loginForm.mail) {
-                this.$message("请输入邮箱");
+            if (!app.mail) {
+                app.$toast({
+                    message: '请输入邮箱',
+                    position: 'bottom',
+                    duration: 2000
+                });
                 return;
             }
-            if (!app.loginForm.password) {
-                this.$message("请输入密码");
+            if (!app.password) {
+                app.$toast({
+                    message: '请输入密码',
+                    position: 'bottom',
+                    duration: 2000
+                });
                 return;
             }
 
             fetch("../user/login", {
                 body: JSON.stringify({
-                    Mail: app.loginForm.mail,
-                    Password: md5(app.loginForm.password)
+                    Mail: app.mail,
+                    Password: md5(app.password)
                 }),
                 method: "POST",
                 headers: {
@@ -53,11 +61,19 @@ var app = new Vue({
         },
         signup: function () {
             if (!app.mail) {
-                this.$message("请输入邮箱");
+                app.$toast({
+                    message: '请输入邮箱',
+                    position: 'bottom',
+                    duration: 2000
+                });
                 return;
             }
             if (!app.password) {
-                this.$message("请输入密码");
+                app.$toast({
+                    message: '请输入密码',
+                    position: 'bottom',
+                    duration: 2000
+                });
                 return;
             }
 

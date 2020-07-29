@@ -1,6 +1,14 @@
-﻿function checkResponse(response, codeHandler) {
+﻿function toast(message) {
+  app.$toast({
+    message: message,
+    position: 'bottom',
+    duration: 2000
+  });
+}
+
+function checkResponse(response, codeHandler) {
     if (!response) {
-      app.$message("请求异常，响应数据为空");
+      toast('请求异常，响应数据为空');
       return false;
     }
   
@@ -9,7 +17,7 @@
         return true;
       default:
         if (response.message) {
-          app.$message(response.message);
+          toast(response.message);
         }
         else {
           var msg = '';
@@ -17,10 +25,10 @@
             msg = codeHandler(response.code);
           }
           if (msg) {
-            app.$message(msg);
+            toast(msg);
           }
           else {
-            app.$message(defaultCodeHandler(response.code));
+            toast(defaultCodeHandler(response.code));
           }
         }
         return false;
@@ -46,3 +54,4 @@ function getQueryStringByName(name){
 
     return result[1];
 }
+

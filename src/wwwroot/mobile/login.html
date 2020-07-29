@@ -11,12 +11,13 @@
     <div id="app">
         <mt-field label="邮箱" placeholder="请输入邮箱" type="email" v-model="mail"></mt-field>
         <mt-field label="密码" placeholder="请输入密码" type="password" v-model="password"></mt-field>
-        <mt-button type="primary" size="large">登录</mt-button>
-        <mt-button size="large">注册</mt-button>
+        <mt-button type="primary" size="large" @click="login">登录</mt-button>
+        <mt-button size="large" @click="signup">注册</mt-button>
     </div>
 
     <script src="../libs/vue.js"></script>
     <script src="../libs/mint-ui/index.js"></script>
+    <script src="../js/md5.min.js"></script>
     <script src="../js/mobile.js"></script>
     <script src="../js/mobile/login.js"></script>
 </body>

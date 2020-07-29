@@ -24,7 +24,7 @@
                         style: { color: 'gray' },
                         handler: () => read(article)
                     }
-                ]" is-link :label="article.summary" @click.native="read(article, true)">
+                ]" is-link :label="article.summary ? article.summary : article.published" @click.native="read(article, true)">
                 </mt-cell-swipe>
             </li>
         </ul>

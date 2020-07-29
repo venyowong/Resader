@@ -24,3 +24,27 @@ ul.list {
 li.page-infinite-listitem.read {
 	color: #808080;
 }
+
+img.center {
+	margin: auto;
+	display: block;
+	padding-top: 80px;
+	padding-bottom: 30px;
+}
+
+body {
+	margin: 0px;
+}
+
+.bottom-button {
+	margin-top: 30px;
+}
+
+.mint-header {
+	height: 45px;
+}
+
+.mint-header-title {
+	height: 20px;
+	font-size: large;
+}
