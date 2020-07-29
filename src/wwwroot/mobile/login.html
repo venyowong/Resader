@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Resader - Mobile</title>
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <link rel="stylesheet" href="../libs/mint-ui/style.css">
+    <link rel="stylesheet" href="../css/mobile.css">
+</head>
+<body>
+    <div id="app">
+        <mt-field label="邮箱" placeholder="请输入邮箱" type="email" v-model="mail"></mt-field>
+        <mt-field label="密码" placeholder="请输入密码" type="password" v-model="password"></mt-field>
+        <mt-button type="primary" size="large">登录</mt-button>
+        <mt-button size="large">注册</mt-button>
+    </div>
+
+    <script src="../libs/vue.js"></script>
+    <script src="../libs/mint-ui/index.js"></script>
+    <script src="../js/mobile.js"></script>
+    <script src="../js/mobile/login.js"></script>
+</body>
+</html>

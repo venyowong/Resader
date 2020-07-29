@@ -159,7 +159,7 @@
                 ignoreRead: window.localStorage.getItem("ignoreRead") == "true"
               };
 
-                fetch(`./rss/feeds?userId=${user.id}`, {
+              fetch(`./rss/feeds?userId=${user.id}`, {
                 method: "GET",
                 headers: {
                   "Authorization": `Bearer ${user.token}`
