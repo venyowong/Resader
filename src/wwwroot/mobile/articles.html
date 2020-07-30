@@ -13,6 +13,7 @@
             <router-link name="back" to="./index.html" slot="left">
                 <mt-button icon="back" @click="back">返回</mt-button>
             </router-link>
+            <mt-button slot="right" @click="readAll">标记为已读</mt-button>
         </mt-header>
     
         <ul class="list" v-infinite-scroll="loadBottom" infinite-scroll-distance="10">

@@ -107,6 +107,15 @@ var app = new Vue({
               }
             }
           });
+        },
+        readAll() {
+          this.$messagebox.confirm("确定将当前所有文章标记为已读?")
+            .then(action => {
+                if (action == "confirm") {
+                    let ids = app.articles.filter(item => !item.read).map(item => item.id);
+                    app.readArticles(ids);
+                }
+            });
         }
     },
     created() {
