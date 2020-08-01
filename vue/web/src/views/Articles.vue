@@ -49,7 +49,7 @@
           return;
         }
 
-        fetch(`https://venyo.cn/resader/rss/unsubscribe`, {
+        fetch(`${common.baseUrl}rss/unsubscribe`, {
             body: JSON.stringify({
                 UserId: this.user.id,
                 Feeds: [this.id]
@@ -80,7 +80,7 @@
         }.bind(this));
       },
       loadArticles: function(append) {
-        fetch(`https://venyo.cn/resader/rss/articles?feedId=${this.id}&page=0&pageCount=30&endTime=${this.endTime}&userId=${this.user.id}`, {
+        fetch(`${common.baseUrl}rss/articles?feedId=${this.id}&page=0&pageCount=30&endTime=${this.endTime}&userId=${this.user.id}`, {
           method: "GET",
           headers: {
             "Authorization": `Bearer ${this.user.token}`
@@ -122,7 +122,7 @@
         }.bind(this));
       },
       readArticles(ids) {
-        fetch(`https://venyo.cn/resader/rss/read`, {
+        fetch(`${common.baseUrl}rss/read`, {
           method: "POST",
             body: JSON.stringify({
                 UserId: this.user.id,

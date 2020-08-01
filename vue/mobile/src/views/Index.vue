@@ -38,7 +38,7 @@
     methods: {
       getActiveFeeds() {
         if (this.feeds.length > 0) {
-          fetch(`https://venyo.cn/resader/rss/activefeeds?userId=${this.user.id}`, {
+          fetch(`${common.baseUrl}rss/activefeeds?userId=${this.user.id}`, {
               method: "GET",
               headers: {
                   "Authorization": `Bearer ${this.user.token}`
@@ -69,7 +69,7 @@
         setTimeout(this.getActiveFeeds, 5000 * 60);
       },
       unsubscribe(feed) {
-        fetch(`https://venyo.cn/resader/rss/unsubscribe`, {
+        fetch(`${common.baseUrl}rss/unsubscribe`, {
           body: JSON.stringify({
               UserId: this.user.id,
               Feeds: [feed.id]
@@ -100,7 +100,7 @@
       }
     },
     created() {
-      fetch(`https://venyo.cn/resader/rss/feeds?userId=${this.user.id}`, {
+      fetch(`${common.baseUrl}rss/feeds?userId=${this.user.id}`, {
           method: "GET",
           headers: {
               "Authorization": `Bearer ${this.user.token}`

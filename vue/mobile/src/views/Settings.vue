@@ -16,7 +16,7 @@
 
     <van-cell-group title="操作">
       <van-cell title="Import" value="导入 RSS" is-link @click="showImport = true" />
-      <van-cell title="Export" value="导出 OPML" is-link :url="'https://venyo.cn/resader/rss/opml.xml?userId=' + user.id" />
+      <van-cell title="Export" value="导出 OPML" is-link :url="baseUrl + 'rss/opml.xml?userId=' + user.id" />
       <van-cell title="重置密码" is-link to="/resetpwd" />
       <van-button class="bottom-button" size="large" @click="logout">退出登录</van-button>
     </van-cell-group>
@@ -46,7 +46,8 @@
         user: common.getUser(),
         ignoreRead: window.localStorage.getItem("ignoreRead") == "true",
         showImport: false,
-        rssUrl: null
+        rssUrl: null,
+        baseUrl: common.baseUrl
       }
     },
     methods: {
@@ -54,7 +55,7 @@
         window.localStorage.setItem("ignoreRead", String(this.ignoreRead));
       },
       subscribe() {
-        fetch(`https://venyo.cn/resader/rss/subscribe`, {
+        fetch(`${common.baseUrl}rss/subscribe`, {
           body: JSON.stringify({
               UserId: this.user.id,
               Feeds: [this.rssUrl]

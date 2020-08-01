@@ -60,7 +60,7 @@
             return;
         }
 
-        fetch("https://venyo.cn/resader/user/login", {
+        fetch(`${common.baseUrl}user/login`, {
           body: JSON.stringify({
               Mail: this.mail,
               Password: md5(this.password)
@@ -103,7 +103,7 @@
             return;
         }
 
-        fetch("https://venyo.cn/resader/user/signup", {
+        fetch(`${common.baseUrl}user/signup`, {
             body: JSON.stringify({
                 Mail: this.mail,
                 Password: md5(this.password)

@@ -62,7 +62,7 @@
     },
     methods: {
       getFeeds() {
-        fetch(`https://venyo.cn/resader/rss/feeds?userId=${user.id}`, {
+        fetch(`${common.baseUrl}rss/feeds?userId=${user.id}`, {
           method: "GET",
           headers: {
             "Authorization": `Bearer ${user.token}`
@@ -90,7 +90,7 @@
       },
       getActiveFeeds() {
         if (this.feeds.length > 0) {
-          fetch(`https://venyo.cn/resader/rss/activefeeds?userId=${user.id}`, {
+          fetch(`${common.baseUrl}rss/activefeeds?userId=${user.id}`, {
             method: "GET",
             headers: {
               "Authorization": `Bearer ${user.token}`
@@ -131,7 +131,7 @@
           confirmButtonText: '确定',
           cancelButtonText: '取消'
         }).then(({ value }) => {
-          fetch(`https://venyo.cn/resader/rss/subscribe`, {
+          fetch(`${common.baseUrl}rss/subscribe`, {
               body: JSON.stringify({
                   UserId: user.id,
                   Feeds: [value]
@@ -166,7 +166,7 @@
         });
       },
       exportOpml() {
-        window.open(`https://venyo.cn/resader/rss/opml.xml?userId=${user.id}`, '_blank');
+        window.open(`${common.baseUrl}rss/opml.xml?userId=${user.id}`, '_blank');
       },
       toSettings() {
         window.location.href = "#/settings";

@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js");
 
 importScripts(
-  "precache-manifest.bc5a3703a2efd5274a82b63d34b67a7f.js"
+  "precache-manifest.5b69cb438ff20e9f10922dafce79c71c.js"
 );
 
 workbox.core.setCacheNameDetails({prefix: "resader"});

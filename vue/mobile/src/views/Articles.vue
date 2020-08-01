@@ -51,7 +51,7 @@
         window.location.href = "#/";
       },
       onLoad() {
-        fetch(`https://venyo.cn/resader/rss/articles?feedId=${this.id}&page=0&pageCount=30&endTime=${this.endTime}&userId=${this.user.id}`, {
+        fetch(`${common.baseUrl}rss/articles?feedId=${this.id}&page=0&pageCount=30&endTime=${this.endTime}&userId=${this.user.id}`, {
             method: "GET",
             headers: {
               "Authorization": `Bearer ${this.user.token}`
@@ -95,7 +95,7 @@
         }
       },
       readArticles(ids) {
-        fetch(`https://venyo.cn/resader/rss/read`, {
+        fetch(`${common.baseUrl}rss/read`, {
           method: "POST",
             body: JSON.stringify({
                 UserId: this.user.id,

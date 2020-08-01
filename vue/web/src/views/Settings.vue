@@ -65,7 +65,7 @@
           return;
       }
 
-      fetch(`https://venyo.cn/resader/user/resetpassword`, {
+      fetch(`${common.baseUrl}user/resetpassword`, {
           method: "POST",
           headers: {
               "Authorization": `Bearer ${this.user.token}`,
