@@ -2,7 +2,7 @@
   <div>
     <img class="center" v-lazy="logo">
 
-    <van-list>
+    <van-list class="index-list">
       <van-swipe-cell v-for="feed in feeds" :key="feed.id">
         <van-cell :border="false" :title="feed.title" is-link 
           :value="feed.active ? '有未读文章' : ''" 
@@ -135,5 +135,9 @@
     display: block;
     padding-top: 80px;
     padding-bottom: 30px;
+  }
+
+  .index-list {
+    margin-bottom: 50px;
   }
 </style>

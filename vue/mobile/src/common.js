@@ -54,6 +54,6 @@ function getQueryStringByName(name){
   return result[1];
 }
 
-var baseUrl = "../";
+var baseUrl = "https://venyo.cn/resader/";
 
 export default { checkResponse, getUser, getQueryStringByName, baseUrl }

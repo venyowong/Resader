@@ -9,6 +9,8 @@ Resader 是一个 RSS 阅读器，程序包含了 web 前端页面和服务端�
 4. `dotnet run`
 5. 打开浏览器访问 http://localhost:9090 或第三步配置的链接
 
+注：src 目录下的前端页面文件不再更新，若要获取到最新的页面，请安装 npm 后，依次执行 build_web.bat、build_mobile.bat、build_wwwroot.bat
+
 ### 服务器环境
 1. 安装 MySql，并使用 src/init.sql 脚本初始化
 2. 在本地环境打包
