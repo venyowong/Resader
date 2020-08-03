@@ -10,8 +10,8 @@
         {{title}}
       </h3>
     </div>
-    <div class="article" :key="article.id" v-for="article in articles">
-      <div v-if="!ignoreRead || !article.read">
+    <div :key="article.id" v-for="article in articles">
+      <div v-if="!ignoreRead || !article.read" class="article">
         <el-link :underline="false" @click="readArticle(article)">
           <h3>
             <font v-if="!article.read">{{article.title}}</font>
@@ -23,8 +23,9 @@
       </div>
     </div>
     <el-row v-if="articles != null && articles.length > 0">
-      <el-button @click="readAndLoad">以上标记为已读，并加载更多</el-button>
+      <el-button @click="readAll">全标记为已读</el-button>
       <el-button @click="loadMore">加载更多</el-button>
+      <el-button @click="readAndLoad">全标记为已读，并加载更多</el-button>
     </el-row>
   </div>
 </template>
@@ -164,6 +165,9 @@
       readArticle(article) {
         this.readArticles([article.id]);
         window.open(article.url, '_blank');
+      },
+      readAll() {
+        this.readArticles(this.articles.filter(item => !item.read).map(a => a.id));
       }
     },
     created() {

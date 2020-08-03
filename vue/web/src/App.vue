@@ -118,7 +118,7 @@
           }.bind(this));
         }
 
-        setTimeout(this.getActiveFeeds, 5000 * 60);
+        setTimeout(this.getActiveFeeds, 3000 * 60);
       },
       toArticles(id, name) {
         window.location.href = `#/articles?id=${id}&name=${name}`;
