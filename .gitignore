@@ -352,3 +352,5 @@ MigrationBackup/
 src/wwwroot
 src/publish-linux
 src/publish-win
+publish-linux
+publish-win
