@@ -1,3 +1,8 @@
 module.exports = {
-  publicPath: ''
+  publicPath: '',
+
+  pwa: {
+    name: 'Resader',
+    themeColor: '#404554'
+  }
 }
