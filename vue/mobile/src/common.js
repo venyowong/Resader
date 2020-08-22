@@ -54,6 +54,6 @@ function getQueryStringByName(name){
   return result[1];
 }
 
-var baseUrl = "./";
+var baseUrl = "../";
 
 export default { checkResponse, getUser, getQueryStringByName, baseUrl }
