@@ -121,6 +121,7 @@
         setTimeout(this.getActiveFeeds, 3000 * 60);
       },
       toArticles(id, name) {
+        this.feeds.find(item => item.id == id).active = false;
         window.location.href = `#/articles?id=${id}&name=${name}`;
       },
       toIndex() {
