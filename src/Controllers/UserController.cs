@@ -21,79 +21,78 @@ namespace Resader.Controllers
     [Route("/User")]
     public class UserController : Controller
     {
-        private IDbConnection connection;
-
         private Configuration config;
+        private UserDao dao;
 
-        public UserController(IDbConnection connection, IOptions<Configuration> config)
+        public UserController(UserDao dao, IOptions<Configuration> config)
         {
-            this.connection = connection;
+            this.dao = dao;
             this.config = config?.Value;
         }
         
         [HttpPost("Login")]
         public async Task<Result<UserResponse>> Login([Required] LoginRequest request)
         {
-            var user = await this.connection.GetUserByMail(request.Mail);
+            var user = await this.dao.GetUserByMail(request.Mail);
             if (user == null)
             {
-                return Result<UserResponse>.CreateFailureResult(101);
+                return Result<UserResponse>.Fail(101);
             }
 
-            if (user.Password != $"{request.Password}{user.Salt}".GetMd5Hash())
+            if (user.Password != $"{request.Password}{user.Salt}".Md5())
             {
-                return Result<UserResponse>.CreateFailureResult(102);
+                return Result<UserResponse>.Fail(102);
             }
 
-            return this.GetToken(user).ToResult();
+            return Result.Success(this.GetToken(user));
         }
 
         [Authorize]
         [HttpPost("ResetPassword")]
         public async Task<Result> ResetPassword([Required] ResetPasswordRequest request)
         {
-            var user = await this.connection.GetUser(request.UserId);
+            var user = await this.dao.GetUser(request.UserId);
             if (user == null)
             {
-                return Result.CreateFailureResult(1, "用户不存在");
+                return Result.Fail(1, "用户不存在");
             }
 
-            if (user.Password != $"{request.OldPassword}{user.Salt}".GetMd5Hash())
+            if (user.Password != $"{request.OldPassword}{user.Salt}".Md5())
             {
-                return Result.CreateFailureResult(1, "原始密码验证失败");
+                return Result.Fail(1, "原始密码验证失败");
             }
 
-            user.Password = $"{request.Password}{user.Salt}".GetMd5Hash();
-            if (await this.connection.UpdateUser(user))
+            user.Password = $"{request.Password}{user.Salt}".Md5();
+            if (await this.dao.UpdateUser(user))
             {
-                return Result.CreateSuccessResult();
+                return Result.Success();
             }
             else
             {
-                return Result.CreateFailureResult(2);
+                return Result.Fail(2);
             }
         }
 
         [HttpPost("SignUp")]
         public async Task<Result<UserResponse>> SignUp([Required] SignUpRequest request)
         {
-            var user = this.connection.GetUserByMail(request.Mail);
+            var user = this.dao.GetUserByMail(request.Mail);
             if (user != null)
             {
-                return Result<UserResponse>.CreateFailureResult(101);
+                return Result<UserResponse>.Fail(101);
             }
 
             var id = Guid.NewGuid().ToString("N");
-            if (await this.connection.CreateUser(id, request.Mail, request.Password))
+            if (await this.dao.CreateUser(id, request.Mail, request.Password))
             {
-                return this.GetToken(new User
+                return Result.Success(this.GetToken(new User
                 {
                     Id = id,
                     Mail = request.Mail
-                }).ToResult();
+                }));
             }
 
-            return Result<UserResponse>.CreateFailureResult(2);
+            return Result<UserResponse>.Fail(2);
         }
 
         private UserResponse GetToken(User user)

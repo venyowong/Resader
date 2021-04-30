@@ -1,10 +1,7 @@
 using System;
 using System.Data;
-using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 using AspNetCoreRateLimit;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
@@ -13,15 +10,21 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using MySql.Data.MySqlClient;
 using Polly;
+using Resader.Extensions;
 using Resader.Factories;
 using Resader.Middlewares;
+using Resader.Quartz;
+using Quartz.Spi;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 using StackExchange.Redis;
+using Resader.Helpers;
+using Resader.Daos;
+using Resader.Services;
+using Resader.Jobs;
 
 namespace Resader
 {
@@ -42,44 +45,13 @@ namespace Resader
             this.AddRateLimit(services);
             services.Configure<Configuration>(this.Configuration);
 
-            services.AddAuthentication(opt =>
-            {
-                opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-            .AddJwtBearer(opt =>
-            {
-                opt.RequireHttpsMetadata = false;
-                opt.SaveToken = true;
-                opt.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(this.Configuration["Jwt:Secret"])),
-                    ValidateIssuer = false,
-                    ValidateAudience = false
-                };
-            });
-            services.AddAuthorization();
-
             services.AddSingleton<DbConnectionFactory>();
-            services.AddScoped<IDbConnection>(provider => provider.GetRequiredService<DbConnectionFactory>()
-                .CreateDbConnection("MySql", "Default"));
-            services.AddSingleton<ConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(this.Configuration["Redis:ConnectionString"]));
-            services.AddTransient<IDatabase>(serviceProvider =>
-            {
-                int.TryParse(this.Configuration["Redis:DefaultDb"], out int db);
-                return serviceProvider.GetService<ConnectionMultiplexer>().GetDatabase(db);
-            });
-            services.AddTransient<RssFetcher>();
-            services.AddSingleton<HttpClient>(_ =>
-            {
-                var handler = new HttpClientHandler();
-                handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
-                var client = new HttpClient(handler);
-                client.Timeout = new TimeSpan(0, 0, 30);
-                client.DefaultRequestHeaders.Add("user-agent", "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.2; WOW64; Trident/6.0)");
-                return client;
-            });
+            services.AddTransient<IDbConnection>(serviceProvider => AsyncHelper.RunSync<IDbConnection>(() => 
+                serviceProvider.GetService<DbConnectionFactory>().CreateDbConnection("MySql", "resader")));
+            services.AddSingleton<RedisConnectionFactory>();
+            services.AddTransient<UserDao>()
+                .AddTransient<RssDao>();
+            services.AddHttpClient<FetchService>();
 
             services.AddCors(o => o.AddPolicy("Default", builder =>
             {
@@ -87,31 +59,33 @@ namespace Resader
                     .AllowAnyMethod()
                     .AllowAnyHeader();
             }));
+
+            bool.TryParse(this.Configuration["UseScheduler"], out bool useScheduler);
+            if (useScheduler)
+            {
+                services.AddSingleton<IJobFactory, CustomJobFactory>();
+                services.AddHostedService<QuartzHostedService>();
+                services.AddTransientBothTypes<IScheduledJob, FetchJob>();
+            }
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IOptions<Configuration> configuration)
         {
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                app.UseOpenApi();
+                app.UseSwaggerUi3();
             }
-            app.UseOpenApi();
-            app.UseSwaggerUi3();
-            var options = new DefaultFilesOptions();
-            options.DefaultFileNames.Clear();
-            options.DefaultFileNames.Add("index.html");
-            app.UseDefaultFiles(options);
             app.UseStaticFiles();
 
             app.UseMiddleware<LogMiddleware>();
 
             app.UseIpRateLimiting();
 
-            app.UseRouting();
-            app.UseAuthentication();
-            app.UseAuthorization();
             app.UseCors("Default");
+            app.UseRouting();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(

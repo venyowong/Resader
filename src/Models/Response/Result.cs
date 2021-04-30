@@ -9,7 +9,7 @@ namespace Resader.Models.Response
 
         public string Message { get; set; }
 
-        public static Result CreateSuccessResult(string message = null)
+        public static Result Success(string message = null)
         {
             return new Result
             {
@@ -18,7 +18,13 @@ namespace Resader.Models.Response
             };
         }
 
-        public static Result CreateFailureResult(int code = -1, string message = null)
+        public static Result<T> Success<T>(T data) => new Result<T>
+        {
+            Code = 0,
+            Data = data
+        };
+
+        public static Result Fail(int code = -1, string message = null)
         {
             return new Result
             {
@@ -32,7 +38,7 @@ namespace Resader.Models.Response
     {
         public T Data { get; set; }
 
-        public static Result<T> CreateFailureResult(int code = -1, string message = null)
+        public static new Result<T> Fail(int code = -1, string message = null)
         {
             return new Result<T>
             {

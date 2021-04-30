@@ -1,5 +1,6 @@
 using System.Data;
 using System.Data.SqlClient;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
 using Polly;
@@ -20,7 +21,7 @@ namespace Resader.Factories
             this.config = config;
         }
 
-        public IDbConnection CreateDbConnection(string clientType, string connectionName)
+        public async Task<IDbConnection> CreateDbConnection(string clientType, string connectionName)
         {
             var key = $"{clientType}:ConnectionStrings:{connectionName}";
             var connectionString = this.config[key];
@@ -30,21 +31,21 @@ namespace Resader.Factories
                 return null;
             }
 
-            switch(clientType.ToLower())
+            switch (clientType.ToLower())
             {
                 case "mysql":
-                    return this.CreateMySqlConnection(connectionString);
+                    return await this.CreateMySqlConnection(connectionString);
                 case "sqlserver":
-                    return this.CreateSqlServerConnection(connectionString);
+                    return await this.CreateSqlServerConnection(connectionString);
             }
-            
+
             Log.Warning($"无法识别的数据库类型: {clientType}");
             return null;
         }
 
-        public IDbConnection CreateMySqlConnection(string connectionString)
+        public async Task<IDbConnection> CreateMySqlConnection(string connectionString)
         {
-            return this.mySqlConnectionPolicy.ExecuteAsync(async () =>
+            return await this.mySqlConnectionPolicy.ExecuteAsync(async () =>
             {
                 var conn = new MySqlConnection(connectionString);
                 if (conn.State != ConnectionState.Open)
@@ -52,12 +53,12 @@ namespace Resader.Factories
                     await conn.OpenAsync();
                 }
                 return conn;
-            }).Result;
+            });
         }
 
-        public IDbConnection CreateSqlServerConnection(string connectionString)
+        public async Task<IDbConnection> CreateSqlServerConnection(string connectionString)
         {
-            return this.sqlConnectionPolicy.ExecuteAsync(async () =>
+            return await this.sqlConnectionPolicy.ExecuteAsync(async () =>
             {
                 var conn = new SqlConnection(connectionString);
                 if (conn.State != ConnectionState.Open)
@@ -65,7 +66,7 @@ namespace Resader.Factories
                     await conn.OpenAsync();
                 }
                 return conn;
-            }).Result;
+            });
         }
     }
 }

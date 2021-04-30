@@ -24,7 +24,7 @@ namespace Resader
         {
             get => Policy<HttpResponseMessage>.Handle<Exception>().FallbackAsync(new HttpResponseMessage(HttpStatusCode.InternalServerError), d =>
             {
-                Log.Warning($"Fallback: {d.Exception.GetType().Name} {d.Exception.Message}");
+                Log.Warning(d.Exception, $"Fallback: {d.Result?.StatusCode} {d.Result?.ReasonPhrase}");
                 return Task.CompletedTask;
             });
         }
@@ -72,7 +72,7 @@ namespace Resader
                 .Or<SqlException>(e => _sqlExceptionErrorCodes.Contains(e.Number))
                 .CircuitBreakerAsync(3, new TimeSpan(0, 0, 30), (d, ts) =>
                 {
-                    Log.Warning($"Open DB Circuit Breaker：{ts.TotalMilliseconds}");
+                    Log.Warning(d.Exception, $"Open DB Circuit Breaker：{ts.TotalMilliseconds}");
                 }, () =>
                 {
                     Log.Warning("Closed DB Circuit Breaker");
@@ -86,12 +86,12 @@ namespace Resader
         public static IAsyncPolicy<T> GetFallBackPolicy<T>() => 
             Policy<T>.Handle<Exception>().FallbackAsync(default(T), d =>
             {
-                Log.Warning($"Fallback: {d.Exception.GetType().Name} {d.Exception.Message}");
+                Log.Warning(d.Exception, "DbFallBack");
                 return Task.CompletedTask;
             });
 
         public static IAsyncPolicy<T> GetDbConnectionPolicy<T>() =>
-            Policy.WrapAsync(GetFallBackPolicy<T>(), GetDbRetryPolicy<T>(), GetDbCircuitBreakerPolicy<T>(), GetTimeoutPolicy<T>(TimeSpan.FromSeconds(10)));
+            Policy.WrapAsync(GetFallBackPolicy<T>(), GetDbRetryPolicy<T>(), GetDbCircuitBreakerPolicy<T>(), GetTimeoutPolicy<T>(TimeSpan.FromSeconds(30)));
 
         public static IAsyncPolicy<T> GetDbCommandPolicy<T>() =>
             Policy.WrapAsync(GetFallBackPolicy<T>(), GetDbCircuitBreakerPolicy<T>(), GetTimeoutPolicy<T>(new TimeSpan(0, 1, 0)));
@@ -104,7 +104,7 @@ namespace Resader
                 .Or<TimeoutRejectedException>()
                 .CircuitBreakerAsync(3, new TimeSpan(0, 0, 30), (d, ts) =>
                 {
-                    Log.Warning($"Open Redis Circuit Breaker：{ts.TotalMilliseconds}");
+                    Log.Warning(d.Exception, $"Open Redis Circuit Breaker：{ts.TotalMilliseconds}");
                 }, () =>
                 {
                     Log.Warning("Closed Redis Circuit Breaker");

@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace Resader
 {
     public class Configuration
@@ -9,8 +7,6 @@ namespace Resader
         public RedisConfig Redis{get;set;}
 
         public JwtConfig Jwt{get;set;}
-
-        public MySqlConfig MySql{get;set;}
     }
 
     public class LoggingConfig
@@ -26,6 +22,8 @@ namespace Resader
     public class RedisConfig
     {
         public string ConnectionString{get;set;}
+
+        public int DefaultDb{get;set;}
     }
 
     public class JwtConfig
@@ -33,10 +31,5 @@ namespace Resader
         public string Secret{get;set;}
 
         public double Expiration{get;set;}
-    }
-
-    public class MySqlConfig
-    {
-        public Dictionary<string, string> ConnectionStrings{get;set;}
     }
 }

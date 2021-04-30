@@ -1,16 +1,22 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 using System.Threading.Tasks;
 using Resader.Extensions;
 using Resader.Models;
 
 namespace Resader.Daos
 {
-    public static class RssDao
+    public class RssDao
     {
-        public static async Task<Article> GetArticle(this IDbConnection connection, string articleId)
+        private IDbConnection connection;
+
+        public RssDao(IDbConnection connection)
+        {
+            this.connection = connection;
+        }
+
+        public async Task<Article> GetArticle(string articleId)
         {
             if (connection == null || string.IsNullOrWhiteSpace(articleId))
             {
@@ -20,8 +26,7 @@ namespace Resader.Daos
             return await connection.QueryFirstOrDefaultWithPolly<Article>("SELECT * FROM article WHERE id=@Id", new { Id = articleId });
         }
 
-        public static async Task<IEnumerable<Article>> GetArticles(this IDbConnection connection, string feedId, 
-            int skip, int take, DateTime endTime)
+        public async Task<IEnumerable<Article>> GetArticles(string feedId, int skip, int take, DateTime endTime)
         {
             if (connection == null || string.IsNullOrWhiteSpace(feedId))
             {
@@ -46,7 +51,7 @@ namespace Resader.Daos
             });
         }
 
-        public static async Task<bool> InsertArticle(this IDbConnection connection, Article article)
+        public async Task<bool> InsertArticle(Article article)
         {
             if (connection == null || article == null)
             {
@@ -58,7 +63,7 @@ namespace Resader.Daos
                 "@Contributors, @Authors, @Copyright, now(), now())", article);
         }
 
-        public static async Task<bool> UpdateArticle(this IDbConnection connection, Article article)
+        public async Task<bool> UpdateArticle(Article article)
         {
             if (connection == null || article == null)
             {
@@ -69,7 +74,7 @@ namespace Resader.Daos
                 "keyword=@Keyword, content=@Content, contributors=@Contributors, authors=@Authors, copyright=@Copyright, update_time=now() WHERE id=@Id", article);
         }
 
-        public static async Task<IEnumerable<Feed>> GetFeeds(this IDbConnection connection, string userId)
+        public async Task<IEnumerable<Feed>> GetFeeds(string userId)
         {
             if (connection == null || string.IsNullOrWhiteSpace(userId))
             {
@@ -80,7 +85,7 @@ namespace Resader.Daos
                 new { UserId = userId });
         }
 
-        public static async Task<Feed> GetFeed(this IDbConnection connection, string feedId)
+        public async Task<Feed> GetFeed(string feedId)
         {
             if (connection == null || string.IsNullOrWhiteSpace(feedId))
             {
@@ -90,7 +95,7 @@ namespace Resader.Daos
             return await connection.QueryFirstOrDefaultWithPolly<Feed>("SELECT * FROM feed WHERE id=@Id", new { Id = feedId });
         }
 
-        public static async Task<bool> InsertFeed(this IDbConnection connection, Feed feed)
+        public async Task<bool> InsertFeed(Feed feed)
         {
             if (connection == null || feed == null)
             {
@@ -100,7 +105,7 @@ namespace Resader.Daos
             return await connection.ExecuteWithPolly("INSERT INTO feed(id, url, title, create_time, update_time) VALUES(@Id, @Url, @Title, now(), now())", feed);
         }
 
-        public static async Task<IEnumerable<Subscription>> GetSubscriptions(this IDbConnection connection, string userId)
+        public async Task<IEnumerable<Subscription>> GetSubscriptions(string userId)
         {
             if (connection == null || string.IsNullOrWhiteSpace(userId))
             {
@@ -110,7 +115,7 @@ namespace Resader.Daos
             return await connection.QueryWithPolly<Subscription>("SELECT * FROM subscription WHERE user_id=@userId", new { userId });
         }
 
-        public static async Task<Subscription> GetSubscription(this IDbConnection connection, string userId, string feedId)
+        public async Task<Subscription> GetSubscription(string userId, string feedId)
         {
             if (connection == null || string.IsNullOrWhiteSpace(feedId) || string.IsNullOrWhiteSpace(userId))
             {
@@ -121,7 +126,7 @@ namespace Resader.Daos
                 "SELECT * FROM subscription WHERE user_id=@UserId AND feed_id=@FeedId", new { FeedId = feedId, UserId = userId });
         }
 
-        public static async Task<bool> InsertSubscription(this IDbConnection connection, Subscription subscription)
+        public async Task<bool> InsertSubscription(Subscription subscription)
         {
             if (connection == null || subscription == null)
             {
@@ -131,9 +136,9 @@ namespace Resader.Daos
             return await connection.ExecuteWithPolly("INSERT INTO subscription(user_id, feed_id, create_time, update_time) VALUES(@UserId, @FeedId, now(), now())", subscription);
         }
 
-        public static async Task<bool> DeleteSubscriptions(this IDbConnection connection, List<string> feeds, string userId)
+        public async Task<bool> DeleteSubscriptions(List<string> feeds, string userId)
         {
-            if (connection == null || feeds == null || !feeds.Any() || string.IsNullOrWhiteSpace(userId))
+            if (connection == null || feeds.IsNullOrEmpty() || string.IsNullOrWhiteSpace(userId))
             {
                 return false;
             }
@@ -145,9 +150,9 @@ namespace Resader.Daos
             });
         }
 
-        public static async Task<IEnumerable<ReadRecord>> GetReadRecords(this IDbConnection connection, string userId, IEnumerable<string> articles)
+        public async Task<IEnumerable<ReadRecord>> GetReadRecords(string userId, IEnumerable<string> articles)
         {
-            if (connection == null || articles == null || !articles.Any() || string.IsNullOrWhiteSpace(userId))
+            if (connection == null || articles.IsNullOrEmpty() || string.IsNullOrWhiteSpace(userId))
             {
                 return null;
             }
@@ -159,9 +164,9 @@ namespace Resader.Daos
             });
         }
 
-        public static async Task<bool> InsertReadRecords(this IDbConnection connection, IEnumerable<ReadRecord> records)
+        public async Task<bool> InsertReadRecords(IEnumerable<ReadRecord> records)
         {
-            if (connection == null || records == null || !records.Any())
+            if (connection == null || records.IsNullOrEmpty())
             {
                 return false;
             }
@@ -176,7 +181,7 @@ namespace Resader.Daos
             }
         }
     
-        public static async Task<IEnumerable<Feed>> GetFeeds(this IDbConnection connection)
+        public async Task<IEnumerable<Feed>> GetFeeds()
         {
             if (connection == null)
             {
@@ -186,7 +191,7 @@ namespace Resader.Daos
             return await connection.QueryWithPolly<Feed>("SELECT * FROM feed");
         }
 
-        public static async Task<Article> GetLastestArticle(this IDbConnection connection, string feedId)
+        public async Task<Article> GetLastestArticle(string feedId)
         {
             if (connection == null || string.IsNullOrWhiteSpace(feedId))
             {

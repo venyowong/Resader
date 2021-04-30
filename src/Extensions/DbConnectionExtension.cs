@@ -14,9 +14,9 @@ namespace Resader.Extensions
         
         public static async Task<IEnumerable<T>> QueryWithPolly<T>(this IDbConnection cnn, string sql, object param = null, 
             IDbTransaction transaction = null, int? commandTimeout = null, CommandType? commandType = null, 
-            [CallerMemberName] string memberName = "")
+            [CallerMemberName] string callerMemberName = "")
         {
-            var key = cnn.ConnectionString + memberName;
+            var key = cnn.ConnectionString + "QueryWithPolly" + callerMemberName;
             IAsyncPolicy<IEnumerable<T>> policy = null;
             if (_dictionary.ContainsKey(key))
             {
@@ -34,33 +34,11 @@ namespace Resader.Extensions
             });
         }
 
-        public static async Task<T> QueryFirstOrDefaultWithPolly<T>(this IDbConnection cnn, string sql, object param = null, 
-            IDbTransaction transaction = null, int? commandTimeout = null, CommandType? commandType = null, 
-            [CallerMemberName] string callerMemberName = "")
-        {
-            var key = cnn.ConnectionString + callerMemberName;
-            IAsyncPolicy<T> policy = null;
-            if (_dictionary.ContainsKey(key))
-            {
-                policy = _dictionary[key] as IAsyncPolicy<T>;
-            }
-            else
-            {
-                policy = PollyPolicies.GetDbCommandPolicy<T>();
-                _dictionary.TryAdd(key, policy);
-            }
-
-            return await policy.ExecuteAsync(async () =>
-            {
-                return await cnn.QueryFirstOrDefaultAsync<T>(sql, param, transaction, commandTimeout, commandType);
-            });
-        }
-
         public static async Task<T> ExecuteScalarWithPolly<T>(this IDbConnection cnn, string sql, object param = null, 
             IDbTransaction transaction = null, int? commandTimeout = null, CommandType? commandType = null, 
             [CallerMemberName] string callerMemberName = "")
         {
-            var key = cnn.ConnectionString + callerMemberName;
+            var key = cnn.ConnectionString + "ExecuteScalarWithPolly" + callerMemberName;
             IAsyncPolicy<T> policy = null;
             if (_dictionary.ContainsKey(key))
             {
@@ -81,7 +59,7 @@ namespace Resader.Extensions
         public static async Task<bool> ExecuteWithPolly(this IDbConnection cnn, string sql, object param = null, IDbTransaction transaction = null, 
             int? commandTimeout = null, CommandType? commandType = null, [CallerMemberName] string callerMemberName = "")
         {
-            var key = cnn.ConnectionString + callerMemberName;
+            var key = cnn.ConnectionString + "ExecuteWithPolly" + callerMemberName;
             IAsyncPolicy<bool> policy = null;
             if (_dictionary.ContainsKey(key))
             {
@@ -96,6 +74,28 @@ namespace Resader.Extensions
             return await policy.ExecuteAsync(async () =>
             {
                 return (await cnn.ExecuteAsync(sql, param, transaction, commandTimeout, commandType)) > 0;
+            });
+        }
+
+        public static async Task<T> QueryFirstOrDefaultWithPolly<T>(this IDbConnection cnn, string sql, object param = null, 
+            IDbTransaction transaction = null, int? commandTimeout = null, CommandType? commandType = null, 
+            [CallerMemberName] string callerMemberName = "")
+        {
+            var key = cnn.ConnectionString + "QueryFirstOrDefaultWithPolly" + callerMemberName;
+            IAsyncPolicy<T> policy = null;
+            if (_dictionary.ContainsKey(key))
+            {
+                policy = _dictionary[key] as IAsyncPolicy<T>;
+            }
+            else
+            {
+                policy = PollyPolicies.GetDbCommandPolicy<T>();
+                _dictionary.TryAdd(key, policy);
+            }
+
+            return await policy.ExecuteAsync(async () =>
+            {
+                return await cnn.QueryFirstOrDefaultAsync<T>(sql, param, transaction, commandTimeout, commandType);
             });
         }
     }

@@ -354,3 +354,4 @@ src/publish-linux
 src/publish-win
 publish-linux
 publish-win
+appsettings.Production.json

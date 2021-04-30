@@ -6,9 +6,16 @@ using Resader.Models;
 
 namespace Resader.Daos
 {
-    public static class UserDao
+    public class UserDao
     {
-        public static async Task<User> GetUserByMail(this IDbConnection connection, string mail)
+        private IDbConnection connection;
+
+        public UserDao(IDbConnection connection)
+        {
+            this.connection = connection;
+        }
+
+        public async Task<User> GetUserByMail(string mail)
         {
             if (string.IsNullOrWhiteSpace(mail) || connection == null)
             {
@@ -18,7 +25,7 @@ namespace Resader.Daos
             return await connection.QueryFirstOrDefaultWithPolly<User>("SELECT * FROM user WHERE mail=@mail;", new { mail });
         }
 
-        public static async Task<User> GetUser(this IDbConnection connection, string id)
+        public async Task<User> GetUser(string id)
         {
             if (string.IsNullOrWhiteSpace(id) || connection == null)
             {
@@ -28,7 +35,7 @@ namespace Resader.Daos
             return await connection.QueryFirstOrDefaultWithPolly<User>("SELECT * FROM user WHERE id=@id;", new { id });
         }
 
-        public static async Task<bool> CreateUser(this IDbConnection connection, string id, string mail, string password)
+        public async Task<bool> CreateUser(string id, string mail, string password)
         {
             if (string.IsNullOrWhiteSpace(mail) || connection == null || string.IsNullOrWhiteSpace(password))
             {
@@ -41,11 +48,11 @@ namespace Resader.Daos
                 id,
                 mail,
                 salt,
-                password = $"{password}{salt}".GetMd5Hash()
+                password = $"{password}{salt}".Md5()
             });
         }
 
-        public static async Task<bool> UpdateUser(this IDbConnection connection, User user)
+        public async Task<bool> UpdateUser(User user)
         {
             if (connection == null || user == null)
             {
