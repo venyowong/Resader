@@ -59,3 +59,12 @@ CREATE TABLE readrecord(
 );
 
 ALTER TABLE readrecord ADD UNIQUE unique_index(user_id, article_id);
+
+CREATE TABLE feed_browse_record(
+    feed_id VARCHAR(100) NOT NULL,
+    user_id VARCHAR(50) NOT NULL,
+    create_time DATETIME NOT NULL,
+    update_time DATETIME NOT NULL
+);
+
+ALTER TABLE feed_browse_record ADD UNIQUE unique_index(user_id, feed_id);

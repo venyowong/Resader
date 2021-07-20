@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Resader.Api</name>
+    </assembly>
+    <members>
+        <member name="M:Resader.Api.Extensions.HttpClientExtension.GetWithPolly(System.Net.Http.HttpClient,System.String,System.Int32)">
+            <summary>
+            基于 Polly 发起 GET 请求
+            </summary>
+            <param name="client"></param>
+            <param name="requestUri"></param>
+            <param name="timeout">超时时长，分钟</param>
+            <returns></returns>
+        </member>
+        <member name="M:Resader.Api.Extensions.HttpClientExtension.PostWithPolly(System.Net.Http.HttpClient,System.String,System.Object,System.Int32)">
+            <summary>
+            基于 Polly 发起 POST 请求
+            </summary>
+            <param name="client"></param>
+            <param name="requestUri"></param>
+            <param name="body"></param>
+            <param name="timeout">超时时长，分钟</param>
+            <returns></returns>
+        </member>
+        <member name="M:Resader.Api.Extensions.ServiceCollectionExtension.AddTransientBothTypes``2(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            为父类型和子类型同时添加服务实例
+            <para>避免通过父类注入的时候，无法通过子类类型查找子类对象，反之亦然</para>
+            <para>可以避免通过父类注入时，通过 GetServices 获取所有对象再查找子类时导致的内存浪费</para>
+            </summary>
+            <typeparam name="TService"></typeparam>
+            <typeparam name="TImplementation"></typeparam>
+            <param name="services"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Resader.Api.Helpers.AsyncHelper">
+            <summary>
+            Helper class to run async methods within a sync process.
+            参考链接：https://www.ryadel.com/en/asyncutil-c-helper-class-async-method-sync-result-wait/
+            </summary>
+        </member>
+        <member name="M:Resader.Api.Helpers.AsyncHelper.RunSync(System.Func{System.Threading.Tasks.Task})">
+            <summary>
+            Executes an async Task method which has a void return value synchronously
+            USAGE: AsyncUtil.RunSync(() => AsyncMethod());
+            </summary>
+            <param name="task">Task method to execute</param>
+        </member>
+        <member name="M:Resader.Api.Helpers.AsyncHelper.RunSync``1(System.Func{System.Threading.Tasks.Task{``0}})">
+            <summary>
+            Executes an async Task_T method which has a T return type synchronously
+            USAGE: T result = AsyncUtil.RunSync(() => AsyncMethod_T());
+            </summary>
+            <typeparam name="TResult">Return Type</typeparam>
+            <param name="task">Task_T method to execute</param>
+            <returns></returns>
+        </member>
+        <member name="P:Resader.Api.Models.Response.Result.Code">
+            <summary>
+            -1 失败 0 正常 1 参数异常 2 系统异常
+            </summary>
+        </member>
+        <member name="F:Resader.Api.PollyPolicies._sqlExceptionErrorCodes">
+            <summary>
+            -2 timeout   -1、2、53 与服务器建立连接发生异常
+            </summary>
+        </member>
+        <member name="M:Resader.Api.Quartz.IScheduledJob.GetJobDetail">
+            <summary>
+            必须调用 JobBuilder.StoreDurably
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Resader.Api.Quartz.IScheduledJob.GetTriggers">
+            <summary>
+            不同的触发规则需要返回不同的 Trigger
+            </summary>
+            <returns></returns>
+        </member>
+    </members>
+</doc>
