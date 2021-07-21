@@ -4,6 +4,39 @@
         <name>Resader.Api</name>
     </assembly>
     <members>
+        <member name="P:Resader.Api.Configuration.AutoRecovery">
+            <summary>
+            是否每次 Scheduler 重启都运行 AutoRecoveryJob
+            </summary>
+        </member>
+        <member name="F:Resader.Api.Const.FeedLatestTimeCache">
+            <summary>
+            feed 最新更新时间
+            </summary>
+        </member>
+        <member name="F:Resader.Api.Const.ArticlesInFeedCache">
+            <summary>
+            feed 下所有 article
+            </summary>
+        </member>
+        <member name="F:Resader.Api.Const.ReadRecordCache">
+            <summary>
+            用户阅读记录
+            </summary>
+        </member>
+        <member name="F:Resader.Api.Const.FeedLatestBrowseTimeCache">
+            <summary>
+            用户最后一次浏览 feed 的时间
+            </summary>
+        </member>
+        <member name="M:Resader.Api.Daos.RssDao.GetArticles(System.String,System.DateTime)">
+            <summary>
+            获取 begin 时间之后插入的文章
+            </summary>
+            <param name="feedId"></param>
+            <param name="begin"></param>
+            <returns></returns>
+        </member>
         <member name="M:Resader.Api.Extensions.HttpClientExtension.GetWithPolly(System.Net.Http.HttpClient,System.String,System.Int32)">
             <summary>
             基于 Polly 发起 GET 请求
@@ -55,11 +88,6 @@
             <typeparam name="TResult">Return Type</typeparam>
             <param name="task">Task_T method to execute</param>
             <returns></returns>
-        </member>
-        <member name="P:Resader.Api.Models.Response.Result.Code">
-            <summary>
-            -1 失败 0 正常 1 参数异常 2 系统异常
-            </summary>
         </member>
         <member name="F:Resader.Api.PollyPolicies._sqlExceptionErrorCodes">
             <summary>

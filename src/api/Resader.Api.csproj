@@ -39,7 +39,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\common\Resader.Common.csproj" />
-    <ProjectReference Include="..\Resader.Common\Resader.Common.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
+using Resader.Api.Helpers;
 using Serilog;
 using System;
 using System.Collections.Concurrent;
@@ -56,68 +57,54 @@ namespace Resader.Api.Services
 
         public void HashSet(string key, Dictionary<string, string> hashFields)
         {
-            var mutex = new Mutex(true, $"MomeryCacheService.{key}");
-            try
+            LockHelper.Lock($"MomeryCacheService.{key}", () =>
             {
-                mutex.WaitOne();
-
                 var cache = this.memoryCache.Get(key);
                 if (cache == null)
                 {
                     this.memoryCache.Set(key, hashFields);
+                    return;
                 }
+
                 var map = cache as Dictionary<string, string>;
                 if (map == null)
                 {
                     this.memoryCache.Set(key, hashFields);
+                    return;
                 }
-                else
+
+                foreach (var item in hashFields)
                 {
-                    foreach (var item in hashFields)
+                    if (!map.ContainsKey(item.Key))
                     {
-                        if (!map.ContainsKey(item.Key))
-                        {
-                            map.Add(item.Key, item.Value);
-                        }
+                        map.Add(item.Key, item.Value);
                     }
-                    this.memoryCache.Set(key, map);
                 }
-            }
-            catch (Exception e)
-            {
-                mutex.ReleaseMutex();
-                Log.Error(e, "MomeryCacheService.HashSet");
-            }
+                this.memoryCache.Set(key, map);
+            });
         }
 
         public void HashSet(string key, string hashField, string value)
         {
-            var mutex = new Mutex(true, $"MomeryCacheService.{key}");
-            try
+            LockHelper.Lock($"MomeryCacheService.{key}", () =>
             {
-                mutex.WaitOne();
-
                 var cache = this.memoryCache.Get(key);
                 if (cache == null)
                 {
                     this.memoryCache.Set(key, new Dictionary<string, string> { { hashField, value } });
+                    return;
                 }
+
                 var map = cache as Dictionary<string, string>;
                 if (map == null)
                 {
                     this.memoryCache.Set(key, new Dictionary<string, string> { { hashField, value } });
+                    return;
                 }
-                else
-                {
-                    map.Add(hashField, value);
-                    this.memoryCache.Set(key, map);
-                }
-            }
-            catch (Exception e)
-            {
-                mutex.ReleaseMutex();
-                Log.Error(e, "MomeryCacheService.HashSet");
-            }
+
+                map.Add(hashField, value);
+                this.memoryCache.Set(key, map);
+            });
         }
 
         public string StringGet(string key)
