@@ -16,17 +16,17 @@ namespace Resader.Api.Controllers
     [Route("/User")]
     public class UserController : BaseController
     {
-        private UserDao dao;
+        private UserService service;
 
-        public UserController(UserDao dao)
+        public UserController(UserService service)
         {
-            this.dao = dao;
+            this.service = service;
         }
 
         [HttpPost("Login")]
         public async Task<Result<UserResponse>> Login([Required] LoginRequest request)
         {
-            var user = await this.dao.GetUserByMail(request.Mail);
+            var user = await this.service.GetUserByMail(request.Mail);
             if (user == null)
             {
                 return Result<UserResponse>.Fail(101);
@@ -44,7 +44,7 @@ namespace Resader.Api.Controllers
         [HttpPost("ResetPassword")]
         public async Task<Result> ResetPassword([Required] ResetPasswordRequest request)
         {
-            var user = await this.dao.GetUser(this.GetUserId());
+            var user = await this.service.GetUser(this.GetUserId());
             if (user == null)
             {
                 return Result.Fail(1, "用户不存在");
@@ -56,7 +56,7 @@ namespace Resader.Api.Controllers
             }
 
             user.Password = $"{request.Password}{user.Salt}".Md5();
-            if (await this.dao.UpdateUser(user))
+            if (await this.service.UpdateUser(user))
             {
                 return Result.Success();
             }
@@ -67,16 +67,16 @@ namespace Resader.Api.Controllers
         }
 
         [HttpPost("SignUp")]
-        public async Task<Result<UserResponse>> SignUp([Required] SignUpRequest request)
+        public async Task<Result<UserResponse>> SignUp([Required] SignUpRequest request, [FromServices] UserDao dao)
         {
-            var user = this.dao.GetUserByMail(request.Mail);
+            var user = await this.service.GetUserByMail(request.Mail);
             if (user != null)
             {
                 return Result<UserResponse>.Fail(101);
             }
 
             var id = Guid.NewGuid().ToString("N");
-            if (await this.dao.CreateUser(id, request.Mail, request.Password))
+            if (await dao.CreateUser(id, request.Mail, request.Password))
             {
                 return Result.Success(this.GetToken(new User
                 {

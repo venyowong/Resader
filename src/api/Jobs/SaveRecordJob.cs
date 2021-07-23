@@ -26,7 +26,11 @@ namespace Resader.Api.Jobs
 
         public async Task Execute(IJobExecutionContext context)
         {
-            var timeStr = File.ReadAllText("SaveRecordTime.txt");
+            var timeStr = string.Empty;
+            if (File.Exists("SaveRecordTime.txt"))
+            {
+                timeStr = File.ReadAllText("SaveRecordTime.txt");
+            }
             DateTime.TryParse(timeStr, out var time);
             var users = await this.userDao.GetUsers();
             foreach (var u in users)
@@ -61,6 +65,8 @@ namespace Resader.Api.Jobs
                 }
                 #endregion
             }
+
+            File.WriteAllText("SaveRecordTime.txt", DateTime.Now.ToString());
         }
 
         public IJobDetail GetJobDetail()
@@ -75,7 +81,7 @@ namespace Resader.Api.Jobs
         {
             yield return TriggerBuilder.Create()
                 .WithIdentity("SaveReadRecordJob_Trigger1", "Resader")
-                .WithCronSchedule("* */5 * * * ?")
+                .WithCronSchedule("0 */5 * * * ?")
                 .ForJob("SaveReadRecordJob", "Resader")
                 .Build();
 

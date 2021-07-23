@@ -31,3 +31,22 @@ Resader 是一个 RSS 阅读器，程序包含了 web 前端页面和服务端�
 5. 访问 http://localhost:7854
 6. 创建 ~/resader_fetch.sh 文件，加入以下命令 `curl -X post -H 'Accept: application/json' http://localhost:7854/fetcher/fetch`
 7. 添加 crontab 配置 `* */5 * * * sh ~/resader_fetch.sh`
+
+### 开发测试
+1. 注册
+
+curl -X POST "http://localhost:5303/User/SignUp" -H "accept: text/plain" -H "Content-Type: application/json" -d "{ \"mail\": \"test@test.com\", \"password\": \"123456\"}"
+```
+{
+  "data": {
+    "id": "b9742470cc7b4db19bc23f7d1ca987a3",
+    "mail": "test@test.com",
+    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyaWQiOiJiOTc0MjQ3MGNjN2I0ZGIxOWJjMjNmN2QxY2E5ODdhMyIsIm1haWwiOiJ0ZXN0QHRlc3QuY29tIn0.aJ8O98dT9-J0MZb2B1cmzfX-ER113uC11Wgpxmmg4VA"
+  },
+  "code": 0,
+  "message": null
+}
+```
+2. 订阅
+
+curl -X POST "http://localhost:5303/RSS/Subscribe" -H "accept: text/plain" -H "Content-Type: application/json" -H "token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyaWQiOiJiOTc0MjQ3MGNjN2I0ZGIxOWJjMjNmN2QxY2E5ODdhMyIsIm1haWwiOiJ0ZXN0QHRlc3QuY29tIn0.aJ8O98dT9-J0MZb2B1cmzfX-ER113uC11Wgpxmmg4VA" -d "[ \"https://venyo.cn/rsshub/bilibili/bangumi/media/28231812\"]"

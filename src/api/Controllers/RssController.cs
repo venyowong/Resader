@@ -45,8 +45,8 @@ namespace Resader.Api.Controllers
 
             var articles = this.service.GetArticles(request.FeedId)
                 .Where(a => end != default ? a.Published < end : true)
-                .Skip(request.Page * request.PageCount)
-                .Take(request.PageCount)
+                .Skip(request.Page * request.PageSize)
+                .Take(request.PageSize)
                 .Select(a => a.ToResponseModel())
                 .ToList();
             var records = this.service.GetReadRecords(this.GetUserId(), articles.Select(a => a.Id).ToList());
@@ -144,7 +144,7 @@ namespace Resader.Api.Controllers
 
         private async Task<FeedOverview> SubscribeFeed(string feed, string userId)
         {
-            (string Title, List<Article> Articles) fetchResult;
+            (Feed Feed, List<Article> Articles) fetchResult;
 
             #region 插入 feed
             var feedId = feed.Md5();
@@ -157,19 +157,14 @@ namespace Resader.Api.Controllers
                     return null;
                 }
 
-                feedEntity = new Feed
-                {
-                    Id = feedId,
-                    Url = feed,
-                    Title = fetchResult.Title
-                };
+                feedEntity = fetchResult.Feed;
                 await this.dao.InsertFeed(feedEntity);
 
                 this.service.SaveArticles(feedId, fetchResult.Articles);
             }
             else
             {
-                fetchResult = (feedEntity.Title, this.service.GetArticles(feedId)
+                fetchResult = (feedEntity, this.service.GetArticles(feedId)
                     .OrderByDescending(a => a.CreateTime)
                     .Take(10)
                     .ToList());
@@ -194,7 +189,7 @@ namespace Resader.Api.Controllers
             return new FeedOverview
             {
                 Id = feedId,
-                Title = fetchResult.Title,
+                Title = fetchResult.Feed.Title,
                 Articles = fetchResult.Articles.Select(a => a.ToResponseModel()).ToList()
             };
         }

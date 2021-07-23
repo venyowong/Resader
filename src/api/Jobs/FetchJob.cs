@@ -58,7 +58,7 @@ namespace Resader.Api.Jobs
         {
             yield return TriggerBuilder.Create()
                 .WithIdentity("FetchJob_Trigger1", "Resader")
-                .WithCronSchedule("* */5 * * * ?")
+                .WithCronSchedule("0 */5 * * * ?")
                 .ForJob("FetchJob", "Resader")
                 .Build();
 

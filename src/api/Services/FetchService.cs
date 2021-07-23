@@ -29,7 +29,7 @@ namespace Resader.Api.Services
             this.Client = httpClient;
         }
 
-        public (string Title, List<Article> Articles) Fetch(string feed, int timeout)
+        public (Feed Feed, List<Article> Articles) Fetch(string feed, int timeout)
         {
             var time = DateTime.Now;
             var task = this.Fetch(feed);
@@ -44,26 +44,33 @@ namespace Resader.Api.Services
             }
         }
 
-        public async Task<(string Title, List<Article> Articles)> Fetch(string feed)
+        public async Task<(Feed Feed, List<Article> Articles)> Fetch(string feed)
         {
             try
             {
                 var feedId = feed.Md5();
                 SyndicationFeed sf = null;
-                string title = null;
                 CodeHollow.FeedReader.Feed cfeed = null;
+                var feedEntity = new Feed
+                {
+                    Url = feed
+                };
                 try
                 {
                     var html = this.Client.GetStringAsync(feed).Result;
                     cfeed = CodeHollow.FeedReader.FeedReader.ReadFromString(html);
-                    title = cfeed?.Title;
+                    feedEntity.Title = cfeed?.Title;
+                    feedEntity.Description = cfeed?.Description;
+                    feedEntity.Image = cfeed?.ImageUrl;
                 }
                 catch
                 {
                     sf = SyndicationFeed.Load(XmlReader.Create(feed));
-                    title = sf?.Title?.Text;
+                    feedEntity.Title = sf?.Title?.Text;
+                    feedEntity.Description = sf?.Description?.Text;
+                    feedEntity.Image = sf?.ImageUrl?.ToString();
                 }
-                if (string.IsNullOrWhiteSpace(title))
+                if (string.IsNullOrWhiteSpace(feedEntity.Title))
                 {
                     Log.Warning($"The title of feed({feed}) is null or white space.");
                     return default;
@@ -71,11 +78,11 @@ namespace Resader.Api.Services
 
                 if (sf != null)
                 {
-                    return (title, await this.ParseArticles(sf, feedId));
+                    return (feedEntity, await this.ParseArticles(sf, feedId));
                 }
                 else
                 {
-                    return (title, await this.ParseArticles(cfeed, feedId));
+                    return (feedEntity, await this.ParseArticles(cfeed, feedId));
                 }
             }
             catch (Exception e)

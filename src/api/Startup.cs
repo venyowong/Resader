@@ -65,11 +65,12 @@ namespace Resader.Api
             services.AddSingleton<DbConnectionFactory>();
             services.AddTransient(serviceProvider =>
             {
-                return AsyncHelper.RunSync(() => serviceProvider.GetService<DbConnectionFactory>().Create());
+                return serviceProvider.GetService<DbConnectionFactory>().Create().Result;
             });
             services.AddTransient<UserDao>()
                 .AddTransient<RssDao>()
-                .AddTransient<RssService>();
+                .AddTransient<RssService>()
+                .AddTransient<UserService>();
             services.AddHttpClient<FetchService>();
 
             services.AddCors(o => o.AddPolicy("Default", builder =>

@@ -28,5 +28,7 @@ namespace Resader.Api
         /// 用户最后一次浏览 feed 的时间
         /// </summary>
         public const string FeedLatestBrowseTimeCache = "Resader:Api:Feed:LatestBrowseTime:";
+
+        public const string UserCache = "Resader:Api:User:";
     }
 }
