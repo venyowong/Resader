@@ -1,5 +1,6 @@
 ﻿using Resader.Api.Daos;
 using Resader.Api.Extensions;
+using Resader.Api.Factories;
 using Resader.Common.Entities;
 using Resader.Common.Extensions;
 using System;
@@ -12,26 +13,74 @@ namespace Resader.Api.Services
     public class RssService
     {
         private ICacheService cache;
-        private RssDao dao;
+        private RecommendService recommendService;
+        private DbConnectionFactory dbConnectionFactory;
 
-        public RssService(ICacheService cache, RssDao dao)
+        public RssService(ICacheService cache, RecommendService recommendService,
+            DbConnectionFactory dbConnectionFactory)
         {
             this.cache = cache;
-            this.dao = dao;
+            this.dbConnectionFactory = dbConnectionFactory;
+            this.recommendService = recommendService;
         }
 
-        public List<Article> GetArticles(string feedId)
+        #region article
+        public async Task<List<Article>> GetArticles(string feedId)
         {
-            var map = this.cache.HashGetAll(Const.ArticlesInFeedCache + feedId);
-            return map.Values.Select(x => x.ToObj<Article>())
-                .Where(x => x != default)
-                .ToList();
+            var key = Const.ArticlesInFeedCache + feedId;
+            var map = this.cache.HashGetAll(key);
+            if (map.Count > 0)
+            {
+                return map.Values.Select(x => x.ToObj<Article>())
+                    .Where(x => x != default)
+                    .ToList();
+            }
+
+            using var connection = await this.dbConnectionFactory.Create();
+            var dao = new RssDao(connection);
+            var articles = await dao.GetArticles(feedId);
+            if (articles.IsNullOrEmpty())
+            {
+                articles = new List<Article>();
+            }
+            this.cache.HashSet(key, articles.ToDictionary(a => a.Id, a => a.ToJson()));
+            return articles;
         }
 
-        public void SaveArticles(string feedId, List<Article> articles)
+        public async Task<bool> AddArticles(string feedId, List<Article> articles)
         {
+            if (string.IsNullOrWhiteSpace(feedId) || articles.IsNullOrEmpty())
+            {
+                return false;
+            }
+
+            var articleList = await this.GetArticles(feedId);
+            articles = articles.FindAll(a => !articleList.Any(x => x.Id == a.Id));
+            using var connection = await this.dbConnectionFactory.Create();
+            var dao = new RssDao(connection);
+            if (!await dao.InsertArticle(articleList.ToArray()))
+            {
+                return false;
+            }
+
             this.cache.HashSet(Const.ArticlesInFeedCache + feedId, articles.ToDictionary(x => x.Id, x => x.ToJson()));
-            this.cache.StringSet(Const.FeedLatestTimeCache + feedId, articles.Max(x => x.CreateTime).ToString("yyyy-MM-dd"));
+            this.cache.StringSet(Const.FeedLatestTimeCache + feedId, DateTime.Now.ToString("yyyy-MM-dd"));
+            return true;
+        }
+
+        public async Task<bool> RefreshArticles(string feedId)
+        {
+            if (string.IsNullOrWhiteSpace(feedId))
+            {
+                return false;
+            }
+
+            using var connection = await this.dbConnectionFactory.Create();
+            var dao = new RssDao(connection);
+            var articles = await dao.GetArticles(feedId);
+            this.cache.HashSet(Const.ArticlesInFeedCache + feedId, articles.ToDictionary(x => x.Id, x => x.ToJson()));
+            this.cache.StringSet(Const.FeedLatestTimeCache + feedId, articles.Max(a => a.CreateTime).ToString("yyyy-MM-dd"));
+            return true;
         }
 
         public DateTime GetFeedLatestTime(string feedId)
@@ -39,7 +88,9 @@ namespace Resader.Api.Services
             DateTime.TryParse(this.cache.StringGet($"{Const.FeedLatestTimeCache}{feedId}"), out var latestTime);
             return latestTime;
         }
+        #endregion
 
+        #region record
         public void SaveReadRecords(string userId, List<string> articles)
         {
             if (articles.IsNullOrEmpty() || string.IsNullOrWhiteSpace(userId))
@@ -81,25 +132,6 @@ namespace Resader.Api.Services
                 .ToList();
         }
 
-        public async Task<List<Feed>> GetFeeds(string userId)
-        {
-            var key = Const.FeedCache + userId;
-            var str = this.cache.StringGet(key);
-            if (!string.IsNullOrWhiteSpace(str))
-            {
-                return str.GZipDecompress().ToObj<List<Feed>>();
-            }
-
-            var feeds = (await this.dao.GetFeeds(userId)).ToList();
-            this.cache.StringSet(key, feeds.ToJson().GZipCompress());
-            return feeds;
-        }
-
-        public void ClearFeedCache(string userId)
-        {
-            this.cache.DeleteKey(Const.FeedCache + userId);
-        }
-
         public void SaveFeedBrowseRecord(string userId, string feedId)
         {
             if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(feedId))
@@ -139,5 +171,110 @@ namespace Resader.Api.Services
                 .Select(x => x.ToObj<FeedBrowseRecord>())
                 .ToList();
         }
+        #endregion
+
+        #region feed
+        public List<Feed> GetFeeds(string userId)
+        {
+            var subscriptions = this.cache.HashGetAll(Const.SubscriptionCache + userId)
+                .Select(x => x.Value.ToObj<Subscription>())
+                .ToList();
+            return this.GetFeeds(subscriptions.Select(x => x.FeedId).ToArray());
+        }
+
+        public Feed GetFeed(string feedId) =>
+            this.cache.HashGet(Const.FeedsCache, feedId)?.ToObj<Feed>();
+
+        public List<Feed> GetFeeds(string[] feedIds) =>
+            this.cache.HashGet(Const.FeedsCache, feedIds)
+                .Select(x => x.Value.ToObj<Feed>())
+                .ToList();
+
+        public List<Feed> GetFeeds() =>
+            this.cache.HashGetAll(Const.FeedsCache)
+                .Select(x => x.Value.ToObj<Feed>())
+                .ToList();
+
+        public void SaveFeeds(List<Feed> feeds)
+        {
+            if (feeds.IsNullOrEmpty())
+            {
+                return;
+            }
+
+            this.cache.HashSet(Const.FeedsCache, feeds.ToDictionary(r => r.Id, r => r.ToJson()));
+        }
+
+        public async Task<bool> UpdateFeed(Feed feed)
+        {
+            using var connection = await this.dbConnectionFactory.Create();
+            var dao = new RssDao(connection);
+            if (!await dao.UpdateFeed(feed))
+            {
+                return false;
+            }
+
+            var oldFeed = this.GetFeed(feed.Id);
+            this.cache.HashSet(Const.FeedsCache, feed.Id, feed.ToJson());
+            this.recommendService.UpdateFeedLabel(feed, oldFeed.Label);
+            return true;
+        }
+
+        public async Task<bool> AddFeed(Feed feed)
+        {
+            using var connection = await this.dbConnectionFactory.Create();
+            var dao = new RssDao(connection);
+            if (!await dao.InsertFeed(feed))
+            {
+                return false;
+            }
+
+            this.cache.HashSet(Const.FeedsCache, feed.Id, feed.ToJson());
+            return true;
+        }
+        #endregion
+
+        #region subscription
+        public Subscription GetSubscription(string userId, string feedId) =>
+            this.cache.HashGet(Const.SubscriptionCache + userId, feedId)?.ToObj<Subscription>();
+
+        public void SaveSubscriptions(string userId, List<Subscription> subscriptions)
+        {
+            if (subscriptions.IsNullOrEmpty() || string.IsNullOrWhiteSpace(userId))
+            {
+                return;
+            }
+
+            this.cache.HashSet(Const.SubscriptionCache + userId, subscriptions.ToDictionary(r => r.FeedId, r => r.ToJson()));
+        }
+
+        public async Task<bool> AddSubscription(Subscription subscription)
+        {
+            using var connection = await this.dbConnectionFactory.Create();
+            var dao = new RssDao(connection);
+            if (subscription == null || !await dao.InsertSubscription(subscription))
+            {
+                return false;
+            }
+
+            this.cache.HashSet(Const.SubscriptionCache + subscription.UserId, subscription.FeedId, subscription.ToJson());
+            return true;
+        }
+
+        public async Task<bool> DeleteSubscriptions(string userId, List<string> feeds)
+        {
+            using var connection = await this.dbConnectionFactory.Create();
+            var dao = new RssDao(connection);
+            if (await dao.DeleteSubscriptions(feeds, userId))
+            {
+                this.cache.HashDelete(Const.SubscriptionCache + userId, feeds.ToArray());
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        #endregion
     }
 }

@@ -17,22 +17,17 @@ namespace Resader.Api.Services
 {
     public class FetchService
     {
-        private DbConnectionFactory connectionFactory;
-        private Configuration configuration;
-
         public HttpClient Client { get; set; }
 
-        public FetchService(DbConnectionFactory connectionFactory, IOptions<Configuration> config, HttpClient httpClient)
+        public FetchService(HttpClient httpClient)
         {
-            this.connectionFactory = connectionFactory;
-            this.configuration = config.Value;
             this.Client = httpClient;
         }
 
         public (Feed Feed, List<Article> Articles) Fetch(string feed, int timeout)
         {
             var time = DateTime.Now;
-            var task = this.Fetch(feed);
+            var task = Task.Run(() => this.Fetch(feed));
             SpinWait.SpinUntil(() => task.IsCompletedSuccessfully || (DateTime.Now - time).TotalSeconds > timeout);
             if (task.IsCompletedSuccessfully)
             {
@@ -44,7 +39,7 @@ namespace Resader.Api.Services
             }
         }
 
-        public async Task<(Feed Feed, List<Article> Articles)> Fetch(string feed)
+        public (Feed Feed, List<Article> Articles) Fetch(string feed)
         {
             try
             {
@@ -76,14 +71,16 @@ namespace Resader.Api.Services
                     return default;
                 }
 
+                List<Article> articles = null;
                 if (sf != null)
                 {
-                    return (feedEntity, await this.ParseArticles(sf, feedId));
+                    articles = this.ParseArticles(sf, feedId);
                 }
                 else
                 {
-                    return (feedEntity, await this.ParseArticles(cfeed, feedId));
+                    articles = this.ParseArticles(cfeed, feedId);
                 }
+                return (feedEntity, articles);
             }
             catch (Exception e)
             {
@@ -93,7 +90,7 @@ namespace Resader.Api.Services
             return default;
         }
 
-        public async Task<List<Article>> ParseArticles(SyndicationFeed sf, string feedId)
+        public List<Article> ParseArticles(SyndicationFeed sf, string feedId)
         {
             if (sf == null || sf.Items.IsNullOrEmpty())
             {
@@ -133,23 +130,12 @@ namespace Resader.Api.Services
                     Copyright = item.Copyright?.Text
                 };
                 articles.Add(article);
-
-                using var conn = await this.connectionFactory.Create();
-                var rssDao = new RssDao(conn);
-                if ((await rssDao.GetArticle(articleId)) == null)
-                {
-                    await rssDao.InsertArticle(article);
-                }
-                else
-                {
-                    await rssDao.UpdateArticle(article);
-                }
             }
 
             return articles;
         }
 
-        public async Task<List<Article>> ParseArticles(CodeHollow.FeedReader.Feed feed, string feedId)
+        public List<Article> ParseArticles(CodeHollow.FeedReader.Feed feed, string feedId)
         {
             if (feed == null || feed.Items == null || !feed.Items.Any())
             {
@@ -184,17 +170,6 @@ namespace Resader.Api.Services
                     Authors = item.Author
                 };
                 articles.Add(article);
-
-                using var conn = await this.connectionFactory.Create();
-                var rssDao = new RssDao(conn);
-                if ((await rssDao.GetArticle(articleId)) == null)
-                {
-                    await rssDao.InsertArticle(article);
-                }
-                else
-                {
-                    await rssDao.UpdateArticle(article);
-                }
             }
 
             return articles;

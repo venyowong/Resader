@@ -72,33 +72,98 @@ namespace Resader.Common.Extensions
             }
         }
 
-        public static string GZipCompress(this string input)
+        #region gzip
+        /// <summary>
+        /// GZip 解压
+        /// </summary>
+        /// <param name="zippedString"></param>
+        /// <returns></returns>
+        public static string GZipDecompress(this string zippedString)
         {
-            if (string.IsNullOrWhiteSpace(input))
+            if (string.IsNullOrWhiteSpace(zippedString))
             {
                 return string.Empty;
             }
 
-            byte[] inputBytes = Encoding.UTF8.GetBytes(input);
-            using var outputStream = new MemoryStream();
-            using var gZipStream = new GZipStream(outputStream, CompressionMode.Compress);
-            gZipStream.Write(inputBytes, 0, inputBytes.Length);
-            var outputBytes = outputStream.ToArray();
-            return Convert.ToBase64String(outputBytes);
+            try
+            {
+                return Encoding.UTF8.GetString(GZipDecompress(Convert.FromBase64String(zippedString)));
+            }
+            catch (Exception e)
+            {
+                return string.Empty;
+            }
         }
 
-        public static string GZipDecompress(this string input)
+        /// <summary>
+        /// GZip 解压
+        /// </summary>
+        /// <param name="zippedData"></param>
+        /// <returns></returns>
+        public static byte[] GZipDecompress(byte[] zippedData)
         {
-            if (string.IsNullOrWhiteSpace(input))
+            try
+            {
+                using (var stream = new GZipStream(new MemoryStream(zippedData), CompressionMode.Decompress))
+                {
+                    const int size = 4096;
+                    var buffer = new byte[size];
+                    using (var memory = new MemoryStream())
+                    {
+                        int count = 0;
+                        do
+                        {
+                            count = stream.Read(buffer, 0, size);
+                            if (count > 0)
+                            {
+                                memory.Write(buffer, 0, count);
+                            }
+                        }
+                        while (count > 0);
+                        return memory.ToArray();
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                return new byte[0];
+            }
+        }
+
+        public static string GZipCompress(this string rawString)
+        {
+            if (string.IsNullOrWhiteSpace(rawString))
             {
                 return string.Empty;
             }
 
-            byte[] inputBytes = Convert.FromBase64String(input);
-            using var inputStream = new MemoryStream(inputBytes);
-            using var gZipStream = new GZipStream(inputStream, CompressionMode.Decompress);
-            using var streamReader = new StreamReader(gZipStream);
-            return streamReader.ReadToEnd();
+            try
+            {
+                return Convert.ToBase64String(GZipCompress(Encoding.UTF8.GetBytes(rawString)));
+            }
+            catch (Exception e)
+            {
+                return string.Empty;
+            }
         }
+
+        private static byte[] GZipCompress(byte[] rawData)
+        {
+            try
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    var gzipStream = new GZipStream(memoryStream, CompressionMode.Compress, true);
+                    gzipStream.Write(rawData, 0, rawData.Length);
+                    gzipStream.Close();
+                    return memoryStream.ToArray();
+                }
+            }
+            catch (Exception e)
+            {
+                return new byte[0];
+            }
+        }
+        #endregion
     }
 }

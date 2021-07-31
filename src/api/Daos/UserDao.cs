@@ -12,6 +12,11 @@ namespace Resader.Api.Daos
     {
         private IDbConnection connection;
 
+        static UserDao()
+        {
+            Utility.MakeDapperMapping(typeof(User));
+        }
+
         public UserDao(IDbConnection connection)
         {
             this.connection = connection;

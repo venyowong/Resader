@@ -31,19 +31,11 @@ namespace Resader.Api.Jobs
                 return;
             }
 
-            Parallel.ForEach(feeds, feed => AsyncHelper.RunSync( async () =>
+            feeds.AsParallel().ForAll(feed =>
             {
-                await this.service.Fetch(feed.Url);
-
-                var latestTime = this.rssService.GetFeedLatestTime(feed.Id);
-                var articles = await this.dao.GetArticles(feed.Id, latestTime);
-                if (articles.IsNullOrEmpty())
-                {
-                    return;
-                }
-
-                this.rssService.SaveArticles(feed.Id, articles.ToList());
-            }));
+                var result = this.service.Fetch(feed.Url);
+                this.rssService.AddArticles(result.Feed.Id, result.Articles).Wait();
+            });
         }
 
         public IJobDetail GetJobDetail()

@@ -4,6 +4,7 @@ using Resader.Common.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Resader.Api.Daos
@@ -12,76 +13,38 @@ namespace Resader.Api.Daos
     {
         private IDbConnection connection;
 
+        static RssDao()
+        {
+            Utility.MakeDapperMapping(typeof(Article), typeof(Feed), typeof(Subscription), typeof(ReadRecord), typeof(FeedBrowseRecord));
+        }
+
         public RssDao(IDbConnection connection)
         {
             this.connection = connection;
         }
 
-        public async Task<Article> GetArticle(string articleId)
-        {
-            if (string.IsNullOrWhiteSpace(articleId))
-            {
-                return null;
-            }
+        #region article
 
-            return await connection.QueryFirstOrDefaultWithPolly<Article>("SELECT * FROM article WHERE id=@Id", new { Id = articleId });
-        }
-
-        public async Task<IEnumerable<Article>> GetArticles(string feedId, int skip, int take, DateTime endTime)
+        public async Task<List<Article>> GetArticles(string feedId)
         {
             if (string.IsNullOrWhiteSpace(feedId))
             {
                 return null;
             }
 
-            string sql;
-            if (endTime != default)
-            {
-                sql = "SELECT * FROM article WHERE feed_id=@FeedId AND published<@EndTime ORDER BY published DESC LIMIT @Skip,@Take";
-            }
-            else
-            {
-                sql = "SELECT * FROM article WHERE feed_id=@FeedId ORDER BY published DESC LIMIT @Skip,@Take";
-            }
-            return await connection.QueryWithPolly<Article>(sql, new
-            {
-                FeedId = feedId,
-                Skip = skip,
-                Take = take,
-                EndTime = endTime
-            });
+            return (await this.connection.QueryWithPolly<Article>("SELECT * FROM article WHERE feed_id=@FeedId", new { FeedId = feedId })).ToList();
         }
 
-        /// <summary>
-        /// 获取 begin 时间之后插入的文章
-        /// </summary>
-        /// <param name="feedId"></param>
-        /// <param name="begin"></param>
-        /// <returns></returns>
-        public async Task<IEnumerable<Article>> GetArticles(string feedId, DateTime begin)
+        public async Task<bool> InsertArticle(params Article[] articles)
         {
-            if (string.IsNullOrWhiteSpace(feedId))
-            {
-                return null;
-            }
-
-            return await this.connection.QueryWithPolly<Article>("SELECT * FROM article WHERE feed_id=@FeedId AND CreateTime>@Begin", new
-            {
-                FeedId = feedId,
-                Begin = begin
-            });
-        }
-
-        public async Task<bool> InsertArticle(Article article)
-        {
-            if (article == null)
+            if (articles.IsNullOrEmpty())
             {
                 return false;
             }
 
-            return await connection.ExecuteWithPolly("INSERT INTO article(id, url, feed_id, title, summary, published, updated, created, keyword, content, contributors, " +
-                "authors, copyright, create_time, update_time) VALUES(@Id, @Url, @FeedId, @Title, @Summary, @Published, @Updated, now(), @Keyword, @Content, " +
-                "@Contributors, @Authors, @Copyright, now(), now())", article);
+            return await connection.ExecuteWithPolly("INSERT INTO article(id, url, feed_id, title, summary, published, updated, keyword, content, contributors, " +
+                "authors, copyright, create_time, update_time) VALUES(@Id, @Url, @FeedId, @Title, @Summary, @Published, @Updated, @Keyword, @Content, " +
+                "@Contributors, @Authors, @Copyright, now(), now())", articles);
         }
 
         public async Task<bool> UpdateArticle(Article article)
@@ -94,28 +57,9 @@ namespace Resader.Api.Daos
             return await connection.ExecuteWithPolly("UPDATE article SET title=@Title, summary=@Summary, published=@Published, updated=@Updated, " +
                 "keyword=@Keyword, content=@Content, contributors=@Contributors, authors=@Authors, copyright=@Copyright, update_time=now() WHERE id=@Id", article);
         }
+        #endregion
 
-        public async Task<IEnumerable<Feed>> GetFeeds(string userId)
-        {
-            if (string.IsNullOrWhiteSpace(userId))
-            {
-                return null;
-            }
-
-            return await connection.QueryWithPolly<Feed>("SELECT * FROM feed WHERE id IN (SELECT feed_id FROM subscription WHERE user_id=@UserId)",
-                new { UserId = userId });
-        }
-
-        public async Task<Feed> GetFeed(string feedId)
-        {
-            if (string.IsNullOrWhiteSpace(feedId))
-            {
-                return null;
-            }
-
-            return await connection.QueryFirstOrDefaultWithPolly<Feed>("SELECT * FROM feed WHERE id=@Id", new { Id = feedId });
-        }
-
+        #region feed
         public async Task<bool> InsertFeed(Feed feed)
         {
             if (feed == null)
@@ -123,9 +67,27 @@ namespace Resader.Api.Daos
                 return false;
             }
 
-            return await connection.ExecuteWithPolly("INSERT INTO feed(id, url, title, create_time, update_time) VALUES(@Id, @Url, @Title, now(), now())", feed);
+            return await connection.ExecuteWithPolly(@"INSERT INTO feed(id, url, title, description, image , label, create_time, update_time) 
+                VALUES(@Id, @Url, @Title, @Description, @Image, @Label, now(), now())", feed);
         }
 
+        public async Task<IEnumerable<Feed>> GetFeeds()
+        {
+            return await connection.QueryWithPolly<Feed>("SELECT * FROM feed");
+        }
+
+        public async Task<bool> UpdateFeed(Feed feed)
+        {
+            if (feed == null)
+            {
+                return false;
+            }
+
+            return await connection.ExecuteWithPolly("UPDATE feed SET title=@Title, update_time=now(), description=@Description, image=@Image, label=@Label WHERE  id=@Id", feed);
+        }
+        #endregion
+
+        #region subscription
         public async Task<IEnumerable<Subscription>> GetSubscriptions(string userId)
         {
             if (string.IsNullOrWhiteSpace(userId))
@@ -134,17 +96,6 @@ namespace Resader.Api.Daos
             }
 
             return await connection.QueryWithPolly<Subscription>("SELECT * FROM subscription WHERE user_id=@userId", new { userId });
-        }
-
-        public async Task<Subscription> GetSubscription(string userId, string feedId)
-        {
-            if (string.IsNullOrWhiteSpace(feedId) || string.IsNullOrWhiteSpace(userId))
-            {
-                return null;
-            }
-
-            return await connection.QueryFirstOrDefaultWithPolly<Subscription>(
-                "SELECT * FROM subscription WHERE user_id=@UserId AND feed_id=@FeedId", new { FeedId = feedId, UserId = userId });
         }
 
         public async Task<bool> InsertSubscription(Subscription subscription)
@@ -170,21 +121,9 @@ namespace Resader.Api.Daos
                 Feeds = feeds
             });
         }
+        #endregion
 
-        public async Task<IEnumerable<ReadRecord>> GetReadRecords(string userId, IEnumerable<string> articles)
-        {
-            if (articles.IsNullOrEmpty() || string.IsNullOrWhiteSpace(userId))
-            {
-                return null;
-            }
-
-            return await connection.QueryWithPolly<ReadRecord>("SELECT * FROM readrecord where user_id=@userId AND article_id in @articles;", new
-            {
-                userId,
-                articles
-            });
-        }
-
+        #region record
         public async Task<ReadRecord> GetReadRecord(string userId, string articleId)
         {
             if (string.IsNullOrWhiteSpace(articleId) || string.IsNullOrWhiteSpace(userId))
@@ -209,23 +148,6 @@ namespace Resader.Api.Daos
             return await connection.QueryWithPolly<ReadRecord>("SELECT * FROM readrecord WHERE user_id=@userId", new { userId });
         }
 
-        public async Task<bool> InsertReadRecords(IEnumerable<ReadRecord> records)
-        {
-            if (records.IsNullOrEmpty())
-            {
-                return false;
-            }
-
-            try
-            {
-                return await connection.ExecuteWithPolly("INSERT INTO readrecord(article_id, user_id, create_time, update_time) VALUES(@ArticleId, @UserId, now(), now())", records);
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
         public async Task<bool> InsertReadRecord(ReadRecord record)
         {
             if (record == null)
@@ -244,21 +166,6 @@ namespace Resader.Api.Daos
             }
 
             return await connection.ExecuteWithPolly("UPDATE readrecord SET update_time=now() WHERE user_id=@UserId AND article_id=@ArticleId", record);
-        }
-
-        public async Task<IEnumerable<Feed>> GetFeeds()
-        {
-            return await connection.QueryWithPolly<Feed>("SELECT * FROM feed");
-        }
-
-        public async Task<Article> GetLastestArticle(string feedId)
-        {
-            if (string.IsNullOrWhiteSpace(feedId))
-            {
-                return null;
-            }
-
-            return await connection.QueryFirstOrDefaultWithPolly<Article>("select * from article a where a.feed_id=@feedId order by a.published desc limit 1;", new { feedId });
         }
 
         public async Task<FeedBrowseRecord> GetFeedBrowseRecord(string userId, string feedId)
@@ -304,5 +211,6 @@ namespace Resader.Api.Daos
 
             return await connection.ExecuteWithPolly("UPDATE feed_browse_record SET update_time=now() WHERE user_id=@UserId AND feed_id=@FeedId", record);
         }
+        #endregion
     }
 }

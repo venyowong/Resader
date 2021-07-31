@@ -25,6 +25,35 @@ namespace Resader.Api.Services
             return true;
         }
 
+        public void HashDelete(string key, string[] hashFields)
+        {
+            LockHelper.Lock($"MomeryCacheService.{key}", () =>
+            {
+                var map = this.HashGetAll(key);
+                foreach (var field in hashFields)
+                {
+                    if (map.ContainsKey(field))
+                    {
+                        map.Remove(field);
+                    }
+                }
+                this.memoryCache.Set(key, map);
+            });
+        }
+
+        public void HashDelete(string key, string hashField)
+        {
+            LockHelper.Lock($"MomeryCacheService.{key}", () =>
+            {
+                var map = this.HashGetAll(key);
+                if (map.ContainsKey(hashField))
+                {
+                    map.Remove(hashField);
+                }
+                this.memoryCache.Set(key, map);
+            });
+        }
+
         public Dictionary<string, string> HashGet(string key, string[] hashFields)
         {
             var map = this.HashGetAll(key);
@@ -122,6 +151,31 @@ namespace Resader.Api.Services
             {
                 this.memoryCache.Set(key, value, expiry.Value);
             }
+        }
+
+        public T GetWithInit<T>(string key, Func<T> init, TimeSpan? expiry = null) where T : class
+        {
+            var cache = this.memoryCache.Get<T>(key);
+            if (cache != null)
+            {
+                return cache;
+            }
+
+            cache = init();
+            if (cache == null)
+            {
+                return cache;
+            }
+
+            if (expiry == null)
+            {
+                this.memoryCache.Set(key, cache);
+            }
+            else
+            { 
+                this.memoryCache.Set(key, cache, expiry.Value);
+            }
+            return cache;
         }
     }
 }

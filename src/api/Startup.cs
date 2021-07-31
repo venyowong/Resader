@@ -70,7 +70,9 @@ namespace Resader.Api
             services.AddTransient<UserDao>()
                 .AddTransient<RssDao>()
                 .AddTransient<RssService>()
-                .AddTransient<UserService>();
+                .AddTransient<UserService>()
+                .AddTransient<RecommendDao>()
+                .AddTransient<RecommendService>();
             services.AddHttpClient<FetchService>();
 
             services.AddCors(o => o.AddPolicy("Default", builder =>
@@ -100,6 +102,10 @@ namespace Resader.Api
                 app.UseOpenApi();
                 app.UseSwaggerUi3();
             }
+            var options = new DefaultFilesOptions();
+            options.DefaultFileNames.Clear();
+            options.DefaultFileNames.Add("index.html");
+            app.UseDefaultFiles(options);
             app.UseStaticFiles();
 
             app.UseMiddleware<LogMiddleware>();
@@ -115,7 +121,7 @@ namespace Resader.Api
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
 
-            Utility.MakeDapperMapping("Resader.Api.Models");
+            Utility.MakeDapperMapping("Resader.Common.Entities");
         }
 
         private void AddRateLimit(IServiceCollection services)

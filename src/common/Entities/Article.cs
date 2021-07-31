@@ -22,8 +22,6 @@ namespace Resader.Common.Entities
 
         public DateTime Updated { get; set; }
 
-        public DateTime Created { get; set; }
-
         public string Keyword { get; set; }
 
         public string Content { get; set; }

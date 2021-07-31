@@ -29,12 +29,12 @@ namespace Resader.Api.Controllers
             var user = await this.service.GetUserByMail(request.Mail);
             if (user == null)
             {
-                return Result<UserResponse>.Fail(101);
+                return Result<UserResponse>.Fail(1, "用户不存在");
             }
 
             if (user.Password != $"{request.Password}{user.Salt}".Md5())
             {
-                return Result<UserResponse>.Fail(102);
+                return Result<UserResponse>.Fail(1, "密码错误");
             }
 
             return Result.Success(this.GetToken(user));
@@ -94,7 +94,8 @@ namespace Resader.Api.Controllers
             {
                 Id = user.Id,
                 Mail = user.Mail,
-                Token = JwtService.GetToken(user)
+                Token = JwtService.GetToken(user),
+                Role = user.Role
             };
         }
     }

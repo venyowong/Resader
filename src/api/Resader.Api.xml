@@ -29,12 +29,12 @@
             用户最后一次浏览 feed 的时间
             </summary>
         </member>
-        <member name="M:Resader.Api.Daos.RssDao.GetArticles(System.String,System.DateTime)">
+        <member name="M:Resader.Api.Controllers.RssController.GetArticles(Resader.Common.Api.Request.GetArticlesRequest)">
             <summary>
-            获取 begin 时间之后插入的文章
+            获取在 EndTime 时间点前的文章
+            <para>EndTime 为空则返回最新文章</para>
             </summary>
-            <param name="feedId"></param>
-            <param name="begin"></param>
+            <param name="request"></param>
             <returns></returns>
         </member>
         <member name="M:Resader.Api.Extensions.HttpClientExtension.GetWithPolly(System.Net.Http.HttpClient,System.String,System.Int32)">
@@ -105,6 +105,14 @@
             不同的触发规则需要返回不同的 Trigger
             </summary>
             <returns></returns>
+        </member>
+        <member name="M:Resader.Api.Utility.MakeDapperMapping(System.Type[])">
+            <summary>
+            由于 MakeDapperMapping(string namspace) 在 Startup.Configure 的最后才调用
+            <para>服务启动之后定时任务立即执行的情况下，可能还未完成映射，会导致部分字段的 Column 特性无法生效</para>
+            <para>因此额外提供该方法，可用于数据库操作之前先对部分 Type 进行映射</para>
+            </summary>
+            <param name="types"></param>
         </member>
     </members>
 </doc>

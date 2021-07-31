@@ -17,6 +17,13 @@ namespace Resader.Common.Entities
 
         public string Image { get; set; }
 
+        public string Label { get; set; }
+
+        /// <summary>
+        /// 是否推荐
+        /// </summary>
+        public bool Recommend { get; set; }
+
         [Column("create_time")]
         public DateTime CreateTime { get; set; }
 

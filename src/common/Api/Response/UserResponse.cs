@@ -11,5 +11,7 @@ namespace Resader.Common.Api.Response
         public string Mail { get; set; }
 
         public string Token { get; set; }
+
+        public int Role { get; set; }
     }
 }

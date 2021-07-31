@@ -10,6 +10,13 @@ namespace Resader.Api.Attributes
 {
     public class JwtValidationAttribute : ActionFilterAttribute
     {
+        private int role;
+
+        public JwtValidationAttribute(int role = 1)
+        {
+            this.role = role;
+        }
+
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             if (!context.HttpContext.Request.Headers.TryGetValue("token", out var value) || !value.Any())
@@ -20,6 +27,12 @@ namespace Resader.Api.Attributes
             var token = value.First();
             var obj = JwtService.ParseToken(token);
             if (obj == null)
+            {
+                context.Result = new StatusCodeResult(401);
+                return;
+            }
+
+            if (this.role == 0 && (int)obj["role"] != 0)
             {
                 context.Result = new StatusCodeResult(401);
                 return;

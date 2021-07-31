@@ -14,6 +14,8 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using OPMLCore.NET;
+using Resader.Api.Factories;
+using System.Text;
 
 namespace Resader.Api.Controllers
 {
@@ -21,20 +23,22 @@ namespace Resader.Api.Controllers
     [Route("/RSS")]
     public class RssController : BaseController
     {
-        private RssDao dao;
-        private FetchService fetchService;
         private RssService service;
 
-        public RssController(RssDao dao, FetchService fetchService, RssService service)
+        public RssController(RssService service)
         {
-            this.dao = dao;
-            this.fetchService = fetchService;
             this.service = service;
         }
 
+        /// <summary>
+        /// 获取在 EndTime 时间点前的文章
+        /// <para>EndTime 为空则返回最新文章</para>
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         [JwtValidation]
         [HttpGet("Articles")]
-        public Result<List<ArticleResponse>> GetArticles([FromQuery][Required] GetArticlesRequest request)
+        public async Task<Result<List<ArticleResponse>>> GetArticles([FromQuery][Required] GetArticlesRequest request)
         {
             // 记录 endtime 为空或当前时间一分钟内的请求记录，用于判断 feed 是否有新文章更新
             DateTime.TryParse(request.EndTime, out DateTime end);
@@ -43,7 +47,7 @@ namespace Resader.Api.Controllers
                 this.service.SaveFeedBrowseRecord(this.GetUserId(), request.FeedId);
             }
 
-            var articles = this.service.GetArticles(request.FeedId)
+            var articles = (await this.service.GetArticles(request.FeedId))
                 .Where(a => end != default ? a.Published < end : true)
                 .Skip(request.Page * request.PageSize)
                 .Take(request.PageSize)
@@ -56,9 +60,9 @@ namespace Resader.Api.Controllers
 
         [JwtValidation]
         [HttpPost("Subscribe")]
-        public Result<List<FeedOverview>> Subscribe([Required][FromBody] List<string> feeds)
+        public Result<List<FeedOverview>> Subscribe([Required][FromBody] List<string> feeds, [FromServices] FetchService fetchService)
         {
-            var tasks = feeds.Select(feed => this.SubscribeFeed(feed, this.GetUserId())).ToArray();
+            var tasks = feeds.Select(feed => this.SubscribeFeed(feed, this.GetUserId(), fetchService)).ToArray();
             Task.WaitAll(tasks);
             return Result.Success(tasks.Select(t => t.Result)
                 .Where(f => f != null)
@@ -69,9 +73,8 @@ namespace Resader.Api.Controllers
         [HttpPost("Unsubscribe")]
         public async Task<Result> Unsubscribe([Required][FromBody] List<string> feeds)
         {
-            if (await this.dao.DeleteSubscriptions(feeds, this.GetUserId()))
+            if (await this.service.DeleteSubscriptions(this.GetUserId(), feeds))
             {
-                this.service.ClearFeedCache(this.GetUserId());
                 return Result.Success();
             }
             else
@@ -90,9 +93,9 @@ namespace Resader.Api.Controllers
 
         [JwtValidation]
         [HttpGet("Feeds")]
-        public async Task<Result<List<FeedResponse>>> GetFeeds()
+        public Result<List<FeedResponse>> GetFeeds()
         {
-            var feeds = await this.service.GetFeeds(this.GetUserId());
+            var feeds = this.service.GetFeeds(this.GetUserId());
             return Result.Success(feeds.Select(f =>
             {
                 var browseRecord = this.service.GetFeedBrowseRecord(this.GetUserId(), f.Id);
@@ -113,7 +116,7 @@ namespace Resader.Api.Controllers
         }
 
         [HttpGet("opml.xml")]
-        public async Task<string> GetOpml([FromQuery][Required] string userId)
+        public FileContentResult GetOpml([FromQuery][Required] string userId)
         {
             var opml = new Opml();
             opml.Encoding = "UTF-8";
@@ -125,7 +128,7 @@ namespace Resader.Api.Controllers
             opml.Head = head;
 
             Body body = new Body();
-            foreach (var feed in await this.service.GetFeeds(userId))
+            foreach (var feed in this.service.GetFeeds(userId))
             {
                 body.Outlines.Add(new Outline
                 {
@@ -139,50 +142,68 @@ namespace Resader.Api.Controllers
             }
             opml.Body = body;
 
-            return opml.ToString();
+            return this.File(Encoding.UTF8.GetBytes(opml.ToString()), "application/xml");
         }
 
-        private async Task<FeedOverview> SubscribeFeed(string feed, string userId)
+        [JwtValidation]
+        [HttpGet("RecommendFeeds")]
+        public List<RecommendedFeed> RecommendFeeds(string label, [FromServices] RecommendService recommendService,
+            [FromServices] RssService rssService, [FromServices] ICacheService cache)
+        {
+            return cache.GetWithInit(Const.RecommendedFeedsCache + label, () =>
+            {
+                var feeds = recommendService.GetLabeledFeeds(label)
+                    .FindAll(f => f.Recommend);
+                return feeds.Select(f => new RecommendedFeed
+                {
+                    Feed = f,
+                    Article = rssService.GetArticles(f.Id).Result.OrderByDescending(f => f.CreateTime).FirstOrDefault()
+                })
+                .OrderByDescending(x => x.Article?.CreateTime)
+                .ToList();
+            }, new TimeSpan(0, 30, 0));
+        }
+
+        private async Task<FeedOverview> SubscribeFeed(string feed, string userId, FetchService fetchService)
         {
             (Feed Feed, List<Article> Articles) fetchResult;
 
             #region 插入 feed
             var feedId = feed.Md5();
-            var feedEntity = await this.dao.GetFeed(feedId);
+            var feedEntity = this.service.GetFeed(feedId);
             if (feedEntity == null)
             {
-                fetchResult = this.fetchService.Fetch(feed, 30);
+                fetchResult = fetchService.Fetch(feed, 30);
                 if (fetchResult == default)
                 {
                     return null;
                 }
 
-                feedEntity = fetchResult.Feed;
-                await this.dao.InsertFeed(feedEntity);
-
-                this.service.SaveArticles(feedId, fetchResult.Articles);
+                if (await this.service.AddFeed(fetchResult.Feed))
+                {
+                    await this.service.AddArticles(feedId, fetchResult.Articles);
+                }
             }
             else
             {
-                fetchResult = (feedEntity, this.service.GetArticles(feedId)
-                    .OrderByDescending(a => a.CreateTime)
-                    .Take(10)
-                    .ToList());
+                fetchResult = (feedEntity, 
+                    (await this.service.GetArticles(feedId))
+                        .OrderByDescending(a => a.CreateTime)
+                        .Take(10)
+                        .ToList());
             }
             #endregion
 
             #region 订阅
-            var subscription = await this.dao.GetSubscription(userId, feedId);
+            var subscription = this.service.GetSubscription(userId, feedId);
             if (subscription == null)
             {
-                this.service.ClearFeedCache(userId);
-
                 subscription = new Subscription
                 {
                     UserId = userId,
                     FeedId = feedId
                 };
-                await this.dao.InsertSubscription(subscription);
+                await this.service.AddSubscription(subscription);
             }
             #endregion
 

@@ -24,7 +24,6 @@ namespace Resader.Common
                 Summary = article.Summary,
                 Published = article.Published,
                 Updated = article.Updated,
-                Created = article.Created,
                 Keyword = article.Keyword,
                 Content = article.Content,
                 Contributors = article.Contributors,

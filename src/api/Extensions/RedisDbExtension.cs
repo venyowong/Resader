@@ -169,5 +169,39 @@ namespace Resader.Api.Extensions
 
             return await policy.ExecuteAsync(() => db.KeyDeleteAsync(redisKey, flags));
         }
+
+        public static async Task<long> HashDeleteWithPolly(this IDatabase db, RedisKey redisKey, RedisValue[] hashFields, CommandFlags flags = CommandFlags.None)
+        {
+            var key = $"{db.Database}HashDelete.RedisValue[]";
+            IAsyncPolicy<long> policy = null;
+            if (_dictionary.ContainsKey(key))
+            {
+                policy = _dictionary[key] as IAsyncPolicy<long>;
+            }
+            else
+            {
+                policy = PollyPolicies.GetRedisCommandPolicy<long>();
+                _dictionary.TryAdd(key, policy);
+            }
+
+            return await policy.ExecuteAsync(() => db.HashDeleteAsync(redisKey, hashFields, flags));
+        }
+
+        public static async Task<bool> HashDeleteWithPolly(this IDatabase db, RedisKey redisKey, RedisValue hashField, CommandFlags flags = CommandFlags.None)
+        {
+            var key = $"{db.Database}HashDelete.RedisValue";
+            IAsyncPolicy<bool> policy = null;
+            if (_dictionary.ContainsKey(key))
+            {
+                policy = _dictionary[key] as IAsyncPolicy<bool>;
+            }
+            else
+            {
+                policy = PollyPolicies.GetRedisCommandPolicy<bool>();
+                _dictionary.TryAdd(key, policy);
+            }
+
+            return await policy.ExecuteAsync(() => db.HashDeleteAsync(redisKey, hashField, flags));
+        }
     }
 }

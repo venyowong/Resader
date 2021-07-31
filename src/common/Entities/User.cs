@@ -15,6 +15,11 @@ namespace Resader.Common.Entities
 
         public string Salt { get; set; }
 
+        /// <summary>
+        /// 角色 0 admin 1 普通用户
+        /// </summary>
+        public int Role { get; set; }
+
         [Column("create_time")]
         public DateTime CreateTime { get; set; }
 

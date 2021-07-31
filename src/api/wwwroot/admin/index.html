@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8" />
+    <title>Resader 后台管理系统</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <link rel="stylesheet" href="../amis/sdk.css" />
+    <!-- 从 1.1.0 开始 sdk.css 将不支持 IE 11，如果要支持 IE11 请引用这个 css，并把前面那个删了 -->
+    <!-- <link rel="stylesheet" href="sdk-ie11.css" /> -->
+    <!-- 不过 amis 开发团队几乎没测试过 IE 11 下的效果，所以可能有细节功能用不了，如果发现请报 issue -->
+    <style>
+        html,
+        body,
+        .app-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="root" class="app-wrapper"></div>
+
+    <script src="../js/common.js"></script>
+    <script src="../js/blueimp_md5.js"></script>
+    <script src="../amis/sdk.js"></script>
+    <script>
+        (function () {
+            var user = getUser(true);
+
+            let amisLib = amisRequire('amis');
+            amisLib.registerFilter('md5', function (input) {
+                return blueimp_md5(input);
+            });
+            let amis = amisRequire('amis/embed');
+            amis.embed('#root', {
+                data: {
+                    user: user
+                },
+                type: "page",
+                title: "首页",
+                body: [
+                    {
+                    type: "form",
+                    title: "登录",
+                    api: {
+                        method: "POST",
+                        url: "../user/login",
+                        data: {
+                            mail: "${mail}",
+                            password: "${password|md5}"
+                        },
+                        adaptor: function (payload, response) {
+                            if (payload.code != 0) {
+                                alert(payload.message);
+                                return payload;
+                            }
+                            else {
+                                window.localStorage.setItem("user", JSON.stringify(payload.data));
+                                this.user = payload.data;
+                                return payload;
+                            }
+                        }
+                    },
+                    controls: [{
+                        type: "email",
+                        name: "mail",
+                        label: "邮箱",
+                        required: true
+                    },
+                    {
+                        type: "password",
+                        name: "password",
+                        label: "密码",
+                        required: true
+                    }],
+                    visibleOn: "this.user == null",
+                    redirect: "./index.html"
+                }, {
+                    type: "form",
+                    title: "用户信息",
+                    controls: [{
+                        type: "email",
+                        name: "user.mail",
+                        label: "邮箱",
+                        disabled: true
+                    },
+                    {
+                        type: "text",
+                        name: "user.role",
+                        label: "角色",
+                        disabled: true
+                    },
+                    {
+                        label: "登出",
+                        type: "button",
+                        actionType: "ajax",
+                        api: {
+                            method: "get",
+                            url: "./index.html",
+                            requestAdaptor: function (api) {
+                                window.localStorage.removeItem("user");
+                                window.location.reload();
+                                return api;
+                            }
+                        }
+                    }],
+                    visibleOn: "this.user != null",
+                    submitText: ""
+                }],
+                aside: [
+                    {
+                        type: "nav",
+                        stacked: true,
+                        links: [
+                            {
+                                label: "home",
+                                to: "index.html",
+                                active: true
+                            },
+                            {
+                                label: "feed",
+                                to: "./feed.html"
+                            },
+                            {
+                                label: "recommend",
+                                to: "./recommend.html"
+                            }
+                        ]
+                    }
+                ]
+            });
+        })();
+    </script>
+</body>
+</html>

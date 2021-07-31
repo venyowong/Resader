@@ -22,13 +22,21 @@ namespace Resader.Api
         /// </summary>
         public const string ReadRecordCache = "Resader:Api:ReadRecords:";
 
-        public const string FeedCache = "Resader:Api:Feeds:";
+        public const string FeedsCache = "Resader:Api:Feeds";
+
+        public const string SubscriptionCache = "Resader:Api:Subscriptions:";
 
         /// <summary>
         /// 用户最后一次浏览 feed 的时间
         /// </summary>
         public const string FeedLatestBrowseTimeCache = "Resader:Api:Feed:LatestBrowseTime:";
 
-        public const string UserCache = "Resader:Api:User:";
+        public const string UserCache = "Resader:Api:User";
+
+        public const string LabelsCache = "Resader:Api:Labels";
+
+        public const string LabeledFeedsCache = "Resader:Api:LabeledFeeds:";
+
+        public const string RecommendedFeedsCache = "Resader:Api:RecommendedFeeds:";
     }
 }

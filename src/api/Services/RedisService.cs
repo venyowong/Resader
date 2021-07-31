@@ -1,5 +1,6 @@
 ﻿using Resader.Api.Extensions;
 using Resader.Api.Helpers;
+using Resader.Common.Extensions;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
@@ -20,6 +21,34 @@ namespace Resader.Api.Services
         public bool DeleteKey(string key)
         {
             return AsyncHelper.RunSync(() => this.db.KeyDeleteWithPolly(key));
+        }
+
+        public T GetWithInit<T>(string key, Func<T> init, TimeSpan? expiry = null) where T : class
+        {
+            var json = this.db.StringGetWithPolly(key).Result;
+            if (!json.IsNullOrEmpty)
+            {
+                return json.ToString().ToObj<T>();
+            }
+
+            var value = init();
+            if (value == null)
+            {
+                return value;
+            }
+
+            this.db.StringSetWithPolly(key, value.ToJson(), expiry).Wait();
+            return value;
+        }
+
+        public void HashDelete(string key, string[] hashFields)
+        {
+            this.db.HashDeleteWithPolly(key, hashFields.Select(x => new RedisValue(x)).ToArray()).Wait();
+        }
+
+        public void HashDelete(string key, string hashField)
+        {
+            this.db.HashDeleteWithPolly(key, hashField).Wait();
         }
 
         public Dictionary<string, string> HashGet(string key, string[] hashFields)

@@ -19,6 +19,7 @@ namespace Resader.Api.Services
                 .WithSecret(_secret)
                 .AddClaim("userid", user.Id)
                 .AddClaim("mail", user.Mail)
+                .AddClaim("role", user.Role)
                 .Encode();
         }
 

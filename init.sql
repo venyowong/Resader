@@ -55,6 +55,11 @@ CREATE TABLE user(
     update_time DATETIME NOT NULL
 );
 
+ALTER TABLE user ADD role int DEFAULT 1;
+
+# 若要修改管理员密码，需要先对明文密码进行 md5 加密，然后加密字符串拼接上 salt，再进行一次 md5 加密，才能得到 password
+INSERT INTO user(id, mail, password, salt, sole, create_time, update_time) VALUES('eadafe4dcd43488ab0350e226f23195e', 'admin@admin.com', 'f3f9d460d8c3a2d4ffe31859f21c9768', '5c8d6080b70c4c3faaaa26e92b271eef', 0, now(), now());
+
 CREATE TABLE readrecord(
     article_id VARCHAR(100) NOT NULL,
     user_id VARCHAR(50) NOT NULL,
@@ -72,3 +77,12 @@ CREATE TABLE feed_browse_record(
 );
 
 ALTER TABLE feed_browse_record ADD UNIQUE unique_index(user_id, feed_id);
+
+CREATE TABLE recommend(
+    label VARCHAR(50) NOT NULL,
+    feed_id VARCHAR(100) NOT NULL,
+    create_time DATETIME NOT NULL,
+    update_time DATETIME NOT NULL
+);
+
+ALTER TABLE recommend ADD UNIQUE unique_index(label, feed_id);

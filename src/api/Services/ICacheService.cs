@@ -22,5 +22,11 @@ namespace Resader.Api.Services
         void StringSet(string key, string value, TimeSpan? expiry = null);
 
         bool DeleteKey(string key);
+
+        void HashDelete(string key, string[] hashFields);
+
+        void HashDelete(string key, string hashField);
+
+        T GetWithInit<T>(string key, Func<T> init, TimeSpan? expiry = null) where T : class;
     }
 }
