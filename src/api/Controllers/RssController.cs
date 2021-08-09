@@ -166,35 +166,13 @@ namespace Resader.Api.Controllers
 
         private async Task<FeedOverview> SubscribeFeed(string feed, string userId, FetchService fetchService)
         {
-            (Feed Feed, List<Article> Articles) fetchResult;
-
-            #region 插入 feed
-            var feedId = feed.Md5();
-            var feedEntity = this.service.GetFeed(feedId);
-            if (feedEntity == null)
+            var fetchResult = await this.service.AddFeed(feed);
+            if (fetchResult == default)
             {
-                fetchResult = fetchService.Fetch(feed, 30);
-                if (fetchResult == default)
-                {
-                    return null;
-                }
-
-                if (await this.service.AddFeed(fetchResult.Feed))
-                {
-                    await this.service.AddArticles(feedId, fetchResult.Articles);
-                }
+                return null;
             }
-            else
-            {
-                fetchResult = (feedEntity, 
-                    (await this.service.GetArticles(feedId))
-                        .OrderByDescending(a => a.CreateTime)
-                        .Take(10)
-                        .ToList());
-            }
-            #endregion
 
-            #region 订阅
+            var feedId = fetchResult.Feed.Id;
             var subscription = this.service.GetSubscription(userId, feedId);
             if (subscription == null)
             {
@@ -205,7 +183,6 @@ namespace Resader.Api.Controllers
                 };
                 await this.service.AddSubscription(subscription);
             }
-            #endregion
 
             return new FeedOverview
             {

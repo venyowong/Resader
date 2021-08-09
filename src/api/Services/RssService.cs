@@ -15,13 +15,15 @@ namespace Resader.Api.Services
         private ICacheService cache;
         private RecommendService recommendService;
         private DbConnectionFactory dbConnectionFactory;
+        private FetchService fetchService;
 
         public RssService(ICacheService cache, RecommendService recommendService,
-            DbConnectionFactory dbConnectionFactory)
+            DbConnectionFactory dbConnectionFactory, FetchService fetchService)
         {
             this.cache = cache;
             this.dbConnectionFactory = dbConnectionFactory;
             this.recommendService = recommendService;
+            this.fetchService = fetchService;
         }
 
         #region article
@@ -36,8 +38,7 @@ namespace Resader.Api.Services
                     .ToList();
             }
 
-            using var connection = await this.dbConnectionFactory.Create();
-            var dao = new RssDao(connection);
+            var dao = new RssDao(this.dbConnectionFactory);
             var articles = await dao.GetArticles(feedId);
             if (articles.IsNullOrEmpty())
             {
@@ -56,9 +57,8 @@ namespace Resader.Api.Services
 
             var articleList = await this.GetArticles(feedId);
             articles = articles.FindAll(a => !articleList.Any(x => x.Id == a.Id));
-            using var connection = await this.dbConnectionFactory.Create();
-            var dao = new RssDao(connection);
-            if (!await dao.InsertArticle(articleList.ToArray()))
+            var dao = new RssDao(this.dbConnectionFactory);
+            if (!await dao.InsertArticle(articles.ToArray()))
             {
                 return false;
             }
@@ -75,11 +75,13 @@ namespace Resader.Api.Services
                 return false;
             }
 
-            using var connection = await this.dbConnectionFactory.Create();
-            var dao = new RssDao(connection);
+            var dao = new RssDao(this.dbConnectionFactory);
             var articles = await dao.GetArticles(feedId);
-            this.cache.HashSet(Const.ArticlesInFeedCache + feedId, articles.ToDictionary(x => x.Id, x => x.ToJson()));
-            this.cache.StringSet(Const.FeedLatestTimeCache + feedId, articles.Max(a => a.CreateTime).ToString("yyyy-MM-dd"));
+            if (!articles.IsNullOrEmpty())
+            {
+                this.cache.HashSet(Const.ArticlesInFeedCache + feedId, articles.ToDictionary(x => x.Id, x => x.ToJson()));
+                this.cache.StringSet(Const.FeedLatestTimeCache + feedId, articles.Max(a => a.CreateTime).ToString("yyyy-MM-dd"));
+            }
             return true;
         }
 
@@ -207,8 +209,7 @@ namespace Resader.Api.Services
 
         public async Task<bool> UpdateFeed(Feed feed)
         {
-            using var connection = await this.dbConnectionFactory.Create();
-            var dao = new RssDao(connection);
+            var dao = new RssDao(this.dbConnectionFactory);
             if (!await dao.UpdateFeed(feed))
             {
                 return false;
@@ -222,8 +223,7 @@ namespace Resader.Api.Services
 
         public async Task<bool> AddFeed(Feed feed)
         {
-            using var connection = await this.dbConnectionFactory.Create();
-            var dao = new RssDao(connection);
+            var dao = new RssDao(this.dbConnectionFactory);
             if (!await dao.InsertFeed(feed))
             {
                 return false;
@@ -231,6 +231,33 @@ namespace Resader.Api.Services
 
             this.cache.HashSet(Const.FeedsCache, feed.Id, feed.ToJson());
             return true;
+        }
+
+        public async Task<(Feed Feed, List<Article> Articles)> AddFeed(string url)
+        {
+            var feedId = url.Md5();
+            var feed = this.GetFeed(feedId);
+            if (feed == null)
+            {
+                var result = fetchService.Fetch(url, 30);
+                if (result == default)
+                {
+                    return result;
+                }
+
+                if (await this.AddFeed(result.Feed))
+                {
+                    await this.AddArticles(feedId, result.Articles);
+                }
+                return result;
+            }
+            else
+            {
+                return (feed, (await this.GetArticles(feedId))
+                        .OrderByDescending(a => a.CreateTime)
+                        .Take(10)
+                        .ToList());
+            }
         }
         #endregion
 
@@ -250,8 +277,7 @@ namespace Resader.Api.Services
 
         public async Task<bool> AddSubscription(Subscription subscription)
         {
-            using var connection = await this.dbConnectionFactory.Create();
-            var dao = new RssDao(connection);
+            var dao = new RssDao(this.dbConnectionFactory);
             if (subscription == null || !await dao.InsertSubscription(subscription))
             {
                 return false;
@@ -263,8 +289,7 @@ namespace Resader.Api.Services
 
         public async Task<bool> DeleteSubscriptions(string userId, List<string> feeds)
         {
-            using var connection = await this.dbConnectionFactory.Create();
-            var dao = new RssDao(connection);
+            var dao = new RssDao(this.dbConnectionFactory);
             if (await dao.DeleteSubscriptions(feeds, userId))
             {
                 this.cache.HashDelete(Const.SubscriptionCache + userId, feeds.ToArray());

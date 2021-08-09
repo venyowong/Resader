@@ -1,4 +1,5 @@
 using Resader.Api.Extensions;
+using Resader.Api.Factories;
 using Resader.Common.Entities;
 using Resader.Common.Extensions;
 using System;
@@ -10,16 +11,16 @@ namespace Resader.Api.Daos
 {
     public class UserDao
     {
-        private IDbConnection connection;
+        private DbConnectionFactory connectionFactory;
 
         static UserDao()
         {
             Utility.MakeDapperMapping(typeof(User));
         }
 
-        public UserDao(IDbConnection connection)
+        public UserDao(DbConnectionFactory connectionFactory)
         {
-            this.connection = connection;
+            this.connectionFactory = connectionFactory;
         }
 
         public async Task<User> GetUserByMail(string mail)
@@ -29,6 +30,7 @@ namespace Resader.Api.Daos
                 return null;
             }
 
+            using var connection = await connectionFactory.Create();
             return await connection.QueryFirstOrDefaultWithPolly<User>("SELECT * FROM user WHERE mail=@mail;", new { mail });
         }
 
@@ -39,6 +41,7 @@ namespace Resader.Api.Daos
                 return null;
             }
 
+            using var connection = await connectionFactory.Create();
             return await connection.QueryFirstOrDefaultWithPolly<User>("SELECT * FROM user WHERE id=@id;", new { id });
         }
 
@@ -49,6 +52,7 @@ namespace Resader.Api.Daos
                 return false;
             }
 
+            using var connection = await connectionFactory.Create();
             var salt = Guid.NewGuid().ToString("N");
             return await connection.ExecuteWithPolly("INSERT INTO user(id, mail, password, salt, create_time, update_time) VALUES(@id, @mail, @password, @salt, now(), now());", new
             {
@@ -66,6 +70,7 @@ namespace Resader.Api.Daos
                 return false;
             }
 
+            using var connection = await connectionFactory.Create();
             return await connection.ExecuteWithPolly("UPDATE user SET password=@Password, update_time=now() WHERE id=@Id OR mail=@Mail;", new
             {
                 user.Id,
@@ -76,7 +81,8 @@ namespace Resader.Api.Daos
 
         public async Task<IEnumerable<User>> GetUsers()
         {
-            return await this.connection.QueryWithPolly<User>("SELECT * FROM user");
+            using var connection = await connectionFactory.Create();
+            return await connection.QueryWithPolly<User>("SELECT * FROM user");
         }
     }
 }

@@ -1,4 +1,5 @@
 using Resader.Api.Extensions;
+using Resader.Api.Factories;
 using Resader.Common.Entities;
 using Resader.Common.Extensions;
 using System;
@@ -11,16 +12,16 @@ namespace Resader.Api.Daos
 {
     public class RssDao
     {
-        private IDbConnection connection;
+        private DbConnectionFactory connectionFactory;
 
         static RssDao()
         {
             Utility.MakeDapperMapping(typeof(Article), typeof(Feed), typeof(Subscription), typeof(ReadRecord), typeof(FeedBrowseRecord));
         }
 
-        public RssDao(IDbConnection connection)
+        public RssDao(DbConnectionFactory connectionFactory)
         {
-            this.connection = connection;
+            this.connectionFactory = connectionFactory;
         }
 
         #region article
@@ -32,7 +33,8 @@ namespace Resader.Api.Daos
                 return null;
             }
 
-            return (await this.connection.QueryWithPolly<Article>("SELECT * FROM article WHERE feed_id=@FeedId", new { FeedId = feedId })).ToList();
+            using var connection = await connectionFactory.Create();
+            return (await connection.QueryWithPolly<Article>("SELECT * FROM article WHERE feed_id=@FeedId", new { FeedId = feedId })).ToList();
         }
 
         public async Task<bool> InsertArticle(params Article[] articles)
@@ -42,6 +44,7 @@ namespace Resader.Api.Daos
                 return false;
             }
 
+            using var connection = await connectionFactory.Create();
             return await connection.ExecuteWithPolly("INSERT INTO article(id, url, feed_id, title, summary, published, updated, keyword, content, contributors, " +
                 "authors, copyright, create_time, update_time) VALUES(@Id, @Url, @FeedId, @Title, @Summary, @Published, @Updated, @Keyword, @Content, " +
                 "@Contributors, @Authors, @Copyright, now(), now())", articles);
@@ -54,6 +57,7 @@ namespace Resader.Api.Daos
                 return false;
             }
 
+            using var connection = await connectionFactory.Create();
             return await connection.ExecuteWithPolly("UPDATE article SET title=@Title, summary=@Summary, published=@Published, updated=@Updated, " +
                 "keyword=@Keyword, content=@Content, contributors=@Contributors, authors=@Authors, copyright=@Copyright, update_time=now() WHERE id=@Id", article);
         }
@@ -67,12 +71,14 @@ namespace Resader.Api.Daos
                 return false;
             }
 
+            using var connection = await connectionFactory.Create();
             return await connection.ExecuteWithPolly(@"INSERT INTO feed(id, url, title, description, image , label, create_time, update_time) 
                 VALUES(@Id, @Url, @Title, @Description, @Image, @Label, now(), now())", feed);
         }
 
         public async Task<IEnumerable<Feed>> GetFeeds()
         {
+            using var connection = await connectionFactory.Create();
             return await connection.QueryWithPolly<Feed>("SELECT * FROM feed");
         }
 
@@ -83,6 +89,7 @@ namespace Resader.Api.Daos
                 return false;
             }
 
+            using var connection = await connectionFactory.Create();
             return await connection.ExecuteWithPolly("UPDATE feed SET title=@Title, update_time=now(), description=@Description, image=@Image, label=@Label WHERE  id=@Id", feed);
         }
         #endregion
@@ -95,6 +102,7 @@ namespace Resader.Api.Daos
                 return null;
             }
 
+            using var connection = await connectionFactory.Create();
             return await connection.QueryWithPolly<Subscription>("SELECT * FROM subscription WHERE user_id=@userId", new { userId });
         }
 
@@ -105,6 +113,7 @@ namespace Resader.Api.Daos
                 return false;
             }
 
+            using var connection = await connectionFactory.Create();
             return await connection.ExecuteWithPolly("INSERT INTO subscription(user_id, feed_id, create_time, update_time) VALUES(@UserId, @FeedId, now(), now())", subscription);
         }
 
@@ -115,6 +124,7 @@ namespace Resader.Api.Daos
                 return false;
             }
 
+            using var connection = await connectionFactory.Create();
             return await connection.ExecuteWithPolly("DELETE FROM subscription WHERE user_id=@UserId AND feed_id in @Feeds", new
             {
                 UserId = userId,
@@ -131,6 +141,7 @@ namespace Resader.Api.Daos
                 return null;
             }
 
+            using var connection = await connectionFactory.Create();
             return await connection.QueryFirstOrDefaultWithPolly<ReadRecord>("SELECT * FROM readrecord WHERE user_id=@userId AND article_id=@articleId", new
             {
                 userId,
@@ -145,6 +156,7 @@ namespace Resader.Api.Daos
                 return null;
             }
 
+            using var connection = await connectionFactory.Create();
             return await connection.QueryWithPolly<ReadRecord>("SELECT * FROM readrecord WHERE user_id=@userId", new { userId });
         }
 
@@ -155,6 +167,7 @@ namespace Resader.Api.Daos
                 return false;
             }
 
+            using var connection = await connectionFactory.Create();
             return await connection.ExecuteWithPolly("INSERT INTO readrecord(article_id, user_id, create_time, update_time) VALUES(@ArticleId, @UserId, now(), now())", record);
         }
 
@@ -165,6 +178,7 @@ namespace Resader.Api.Daos
                 return false;
             }
 
+            using var connection = await connectionFactory.Create();
             return await connection.ExecuteWithPolly("UPDATE readrecord SET update_time=now() WHERE user_id=@UserId AND article_id=@ArticleId", record);
         }
 
@@ -175,6 +189,7 @@ namespace Resader.Api.Daos
                 return null;
             }
 
+            using var connection = await connectionFactory.Create();
             return await connection.QueryFirstOrDefaultWithPolly<FeedBrowseRecord>("SELECT * FROM feed_browse_record WHERE user_id=@userId AND feed_id=@feedId", new
             {
                 userId,
@@ -189,6 +204,7 @@ namespace Resader.Api.Daos
                 return null;
             }
 
+            using var connection = await connectionFactory.Create();
             return await connection.QueryWithPolly<FeedBrowseRecord>("SELECT * FROM feed_browse_record WHERE user_id=@userId", new { userId });
         }
 
@@ -199,6 +215,7 @@ namespace Resader.Api.Daos
                 return false;
             }
 
+            using var connection = await connectionFactory.Create();
             return await connection.ExecuteWithPolly("INSERT INTO feed_browse_record(feed_id, user_id, create_time, update_time) VALUES(@FeedId, @UserId, now(), now())", record);
         }
 
@@ -209,6 +226,7 @@ namespace Resader.Api.Daos
                 return false;
             }
 
+            using var connection = await connectionFactory.Create();
             return await connection.ExecuteWithPolly("UPDATE feed_browse_record SET update_time=now() WHERE user_id=@UserId AND feed_id=@FeedId", record);
         }
         #endregion

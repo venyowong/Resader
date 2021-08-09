@@ -63,10 +63,6 @@ namespace Resader.Api
             }
 
             services.AddSingleton<DbConnectionFactory>();
-            services.AddTransient(serviceProvider =>
-            {
-                return serviceProvider.GetService<DbConnectionFactory>().Create().Result;
-            });
             services.AddTransient<UserDao>()
                 .AddTransient<RssDao>()
                 .AddTransient<RssService>()

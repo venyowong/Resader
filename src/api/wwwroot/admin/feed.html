@@ -42,6 +42,35 @@
                 title: "feed",
                 body: [
                     {
+                        label: "添加",
+                        type: "button",
+                        actionType: "dialog",
+                        level: "primary",
+                        className: "m-b-sm",
+                        dialog: {
+                            title: "添加 feed",
+                            body: {
+                                type: "form",
+                                api: {
+                                    method: "post",
+                                    url: "./AddFeed?url=${url}",
+                                    headers: {
+                                        token: user.token
+                                    }
+                                },
+                                controls: [
+                                    {
+                                        type: 'text',
+                                        name: "url",
+                                        label: "链接",
+                                        width: 150,
+                                        required: true
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    {
                         type: 'crud',
                         api: {
                             method: "get",
@@ -123,7 +152,8 @@
                             {
                                 type: 'text',
                                 name: "title",
-                                label: "标题"
+                                label: "标题",
+                                width: 150
                             },
                             {
                                 type: 'text',

@@ -48,6 +48,7 @@ namespace Resader.Api.Services
                 CodeHollow.FeedReader.Feed cfeed = null;
                 var feedEntity = new Feed
                 {
+                    Id = feed.Md5(),
                     Url = feed
                 };
                 try

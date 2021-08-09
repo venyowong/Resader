@@ -29,6 +29,13 @@ namespace Resader.Api.Controllers
             return await service.UpdateFeed(request);
         }
 
+        [HttpPost("AddFeed")]
+        public async Task<bool> AddFeed([FromQuery] string url, [FromServices] RssService service)
+        {
+            await service.AddFeed(url);
+            return true;
+        }
+
         [HttpGet("Labels")]
         public List<string> GetLabels([FromServices] RecommendService recommendService) => recommendService.GetLabels();
 

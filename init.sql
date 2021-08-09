@@ -35,6 +35,7 @@ CREATE TABLE article(
 );
 
 ALTER TABLE article ADD INDEX feed_id_index(feed_id);
+ALTER TABLE article DROP created;
 
 CREATE TABLE subscription(
     id INT PRIMARY KEY AUTO_INCREMENT,
