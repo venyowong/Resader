@@ -6,5 +6,10 @@
   </view>
 </view>
 <van-cell-group wx:for="{{feeds}}">
-  <van-cell title="{{item.title}}" is-link url="{{'/pages/articles/articles?feed=' + item.id}}"/>
+  <van-cell is-link url="{{'/pages/articles/articles?feed=' + item.id}}" use-label-slot>
+    <view slot="title">
+      <view class="van-cell-text">{{item.title}}</view>
+      <van-tag wx:if="{{item.active}}" type="danger">new</van-tag>
+    </view>
+  </van-cell>
 </van-cell-group>

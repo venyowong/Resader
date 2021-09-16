@@ -233,6 +233,8 @@ namespace Resader.Api.Services
                 return false;
             }
 
+            feed.CreateTime = DateTime.Now;
+            feed.UpdateTime = DateTime.Now;
             this.cache.HashSet(Const.FeedsCache, feed.Id, feed.ToJson());
             return true;
         }

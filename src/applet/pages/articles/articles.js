@@ -1,6 +1,5 @@
 // pages/articles/articles.js
 let common = require('../../common')
-let md5 = require('js-md5')
 import Notify from '../../miniprogram_npm/@vant/weapp/notify/notify'
 
 Page({
@@ -10,7 +9,8 @@ Page({
      */
     data: {
         articles: null,
-        page: 0
+        page: 0,
+        showMore: true
     },
     loadArticles: function() {
         let $this = this
@@ -36,7 +36,11 @@ Page({
                   $this.setData({articles: res.data.data})
               }
               if (res.data.data.length > 0) {
-                  $this.setData({page: $this.data.page + 1})
+                Notify({type: "success", message: `加载了${res.data.data.length}篇文章`, duration: 1000})
+                $this.setData({page: $this.data.page + 1})
+              }
+              if (res.data.data.length < 30) {
+                  $this.setData({showMore: false})
               }
             }
           })
@@ -54,6 +58,13 @@ Page({
                 $this.setData(JSON.parse(res.data))
 
                 $this.loadArticles()
+            }
+        })
+
+        wx.getStorage({
+            key: "showUnread",
+            success(res) {
+                $this.setData({showUnread: res.data == "true"})
             }
         })
     },
@@ -107,7 +118,19 @@ Page({
 
     },
     read: function(e) {
-        console.log(this)
         console.log(e)
+        let id = e.currentTarget.dataset.id
+        wx.setClipboardData({
+            data: this.data.articles.find(a => a.id == id).url,
+            success (res) {
+                Notify({type: "success", message: "文章链接已复制到剪切板，请使用浏览器打开"})
+            }
+          })
+        wx.request({
+          url: `${common.baseurl}/rss/read`,
+          method: "POST",
+          data: [id],
+          header: {token: this.data.token}
+        })
     }
 })

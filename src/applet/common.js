@@ -1,3 +1,3 @@
-let baseurl = 'https://venyo.cn/resader2'
+let baseurl = 'https://venyo.cn/resader'
 
 export {baseurl}

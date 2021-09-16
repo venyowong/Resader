@@ -1,4 +1,11 @@
+<van-notify id="van-notify" />
 <van-cell-group wx:for="{{articles}}">
-  <van-cell title="{{item.title}}" data-id="item.id" label="{{item.summary}}" bindtap="read">
+  <van-cell wx:if="{{!showUnread || !item.read}}" title="{{item.title}}" data-id="{{item.id}}" label="{{item.summary}}" bindtap="read">
   </van-cell>
 </van-cell-group>
+<van-button wx:if="{{showMore}}" type="primary" size="large" round plain bindtap="loadArticles">
+  加载更多
+</van-button>
+<text wx:else class="center">
+  已经到底了┑(￣Д ￣)┍
+</text>
