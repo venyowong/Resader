@@ -1,0 +1,4 @@
+<van-cell-group wx:for="{{articles}}">
+  <van-cell title="{{item.title}}" data-id="item.id" label="{{item.summary}}" bindtap="read">
+  </van-cell>
+</van-cell-group>

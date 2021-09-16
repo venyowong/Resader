@@ -17,8 +17,5 @@ namespace Resader.Common.Api.Request
         public int PageSize { get; set; }
 
         public string EndTime { get; set; }
-
-        [Required]
-        public string UserId { get; set; }
     }
 }

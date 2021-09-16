@@ -1,0 +1,49 @@
+{
+    "pages": [
+        "pages/index/index",
+        "pages/logs/logs",
+        "pages/user/user",
+        "pages/resetpassword/resetpassword",
+        "pages/articles/articles"
+    ],
+    "window": {
+        "backgroundTextStyle": "light",
+        "navigationBarBackgroundColor": "#fff",
+        "navigationBarTitleText": "Resader",
+        "navigationBarTextStyle": "black"
+    },
+    "useExtendedLib": {
+        "weui": true
+    },
+    "sitemapLocation": "sitemap.json",
+    "tabBar": {
+        "list": [
+            {
+                "selectedIconPath": "images/home.png",
+                "iconPath": "images/home.png",
+                "pagePath": "pages/index/index",
+                "text": "首页"
+            },
+            {
+                "selectedIconPath": "images/精选.png",
+                "iconPath": "images/精选.png",
+                "pagePath": "pages/index/index",
+                "text": "精选"
+            },
+            {
+                "selectedIconPath": "images/我.png",
+                "iconPath": "images/我.png",
+                "pagePath": "pages/user/user",
+                "text": "我"
+            }
+        ]
+    },
+    "usingComponents": {
+        "van-field": "@vant/weapp/field/index",
+        "van-button": "@vant/weapp/button/index",
+        "van-notify": "@vant/weapp/notify/index",
+        "van-cell": "@vant/weapp/cell/index",
+        "van-cell-group": "@vant/weapp/cell-group/index",
+        "van-dialog": "@vant/weapp/dialog/index"
+    }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "applet",
+  "version": "1.0.0",
+  "description": "小程序",
+  "main": "app.js",
+  "dependencies": {
+    "@vant/weapp": "^1.8.5",
+    "js-md5": "^0.7.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}

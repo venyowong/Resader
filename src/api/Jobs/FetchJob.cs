@@ -34,7 +34,10 @@ namespace Resader.Api.Jobs
             feeds.AsParallel().ForAll(feed =>
             {
                 var result = this.service.Fetch(feed.Url);
-                this.rssService.AddArticles(result.Feed.Id, result.Articles).Wait();
+                if (result.Feed != null && !result.Articles.IsNullOrEmpty())
+                {
+                    this.rssService.AddArticles(result.Feed.Id, result.Articles).Wait();
+                }
             });
         }
 

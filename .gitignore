@@ -357,3 +357,6 @@ publish-win
 appsettings.Production.json
 
 SaveRecordTime.txt
+
+src/applet/node_modules/
+src/applet/miniprogram_npm

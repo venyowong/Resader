@@ -46,7 +46,7 @@ namespace Resader.Api
             services.Configure<Configuration>(this.Configuration);
 
             var redisConfig = this.Configuration.GetSection("Redis");
-            if (redisConfig == null)
+            if (redisConfig?.Value == null)
             {
                 services.AddMemoryCache();
                 services.AddTransient<ICacheService, MemoryCacheService>();

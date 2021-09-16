@@ -26,6 +26,7 @@ namespace Resader.Api.Controllers
         {
             var request = (await this.Request.ReadBody()).ToObj<Feed>();
             request.Id = id;
+            request.UpdateTime = DateTime.Now;
             return await service.UpdateFeed(request);
         }
 
