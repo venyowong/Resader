@@ -7,7 +7,7 @@
       :finished="finished"
       finished-text="没有更多了 ヽ(ー_ー)ノ"
       @load="onLoad"
-      style="margin-top: 46px"
+      style="margin-top: 46px;margin-bottom: 50px;"
     >
       <van-swipe-cell v-for="article in articles" :key="article.id">
         <van-cell :border="false" :title="article.title" is-link :class="article.read ? 'read' : ''"

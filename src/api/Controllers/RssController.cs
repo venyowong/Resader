@@ -49,6 +49,8 @@ namespace Resader.Api.Controllers
 
             var articles = (await this.service.GetArticles(request.FeedId))
                 .Where(a => end != default ? a.Published < end : true)
+                .OrderByDescending(a => a.CreateTime)
+                .ThenByDescending(a => a.Title)
                 .Skip(request.Page * request.PageSize)
                 .Take(request.PageSize)
                 .Select(a => a.ToResponseModel())
