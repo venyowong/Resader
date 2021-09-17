@@ -15,6 +15,9 @@ Page({
     })
   },
   onLoad() {
+    
+  },
+  onShow() {
     let $this = this
     wx.getStorage({
         key: "user",

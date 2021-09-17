@@ -145,7 +145,6 @@ namespace Resader.Api.Controllers
             return this.File(Encoding.UTF8.GetBytes(opml.ToString()), "application/xml");
         }
 
-        [JwtValidation]
         [HttpGet("RecommendFeeds")]
         public List<RecommendedFeed> RecommendFeeds(string label, [FromServices] RecommendService recommendService,
             [FromServices] RssService rssService, [FromServices] ICacheService cache)

@@ -1,73 +1,30 @@
 <template>
   <div id="app">
-  <v-app id="inspire">
-    <v-card
-      height="400"
-      width="256"
-      class="mx-auto"
-    >
-      <v-navigation-drawer permanent>
-        <v-list-item>
-          <v-list-item-content>
-            <v-list-item-title class="title">
-              Application
-            </v-list-item-title>
-            <v-list-item-subtitle>
-              subtext
-            </v-list-item-subtitle>
-          </v-list-item-content>
-        </v-list-item>
-  
-        <v-divider></v-divider>
-  
-        <v-list
-          dense
-          nav
-        >
-          <v-list-item
-            v-for="item in items"
-            :key="item.title"
-            link
-          >
-            <v-list-item-icon>
-              <v-icon>{{ item.icon }}</v-icon>
-            </v-list-item-icon>
-  
-            <v-list-item-content>
-              <v-list-item-title>{{ item.title }}</v-list-item-title>
-            </v-list-item-content>
-          </v-list-item>
-        </v-list>
-      </v-navigation-drawer>
-    </v-card>
-  </v-app>
-</div>
+    <router-view/>
+    <van-tabbar v-model="active" route>
+      <van-tabbar-item replace name="home" to="/" icon="home-o">首页</van-tabbar-item>
+      <van-tabbar-item replace name="recommend" to="/recommend" icon="gem-o">精选</van-tabbar-item>
+      <van-tabbar-item replace name="settings" to="/settings" icon="user-o">我</van-tabbar-item>
+    </van-tabbar>
+  </div>
 </template>
 
 <script>
-  import Vuetify from 'vuetify'
+  import common from "@/common.js";
 
-  export default {
-    vuetify: new Vuetify(),
-    props: {
-      source: String,
-    },
-    data: () => {
-      return {
-      items: [
-        { title: 'Dashboard', icon: 'mdi-view-dashboard' },
-        { title: 'Photos', icon: 'mdi-image' },
-        { title: 'About', icon: 'mdi-help-box' },
-      ],
-      right: null,
-    }
-    }
+  if (!common.getUser()) {
+    window.location.href = "#/login";
   }
+  
+  export default {
+    data() {
+      return {
+        active: 'home',
+      };
+    }
+  };
 </script>
 
+<style>
 
-<style lang="scss">
-#keep .v-navigation-drawer__border {
-  display: none
-}
 </style>
