@@ -1,6 +1,8 @@
 # Resader
 Resader 是一个 RSS 阅读器，程序包含了 web 前端页面和服务端，提供了 RSS 抓取接口，可供自定义设置定时任务，比如使用 crontab 定时调用接口。
 
+**由于访问github的网络不是很稳定，导致了代码提交不是很顺畅，因此将项目迁移到[gitee](https://gitee.com/venyowong/Resader)**
+
 ## 快速启动
 ### 使用已打包好的程序包
 1. 安装 MySql，并使用 src/init.sql 脚本初始化
