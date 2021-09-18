@@ -16,7 +16,7 @@
 
     <van-cell-group title="操作">
       <van-cell title="Import" value="导入 RSS" is-link @click="showImport = true" />
-      <van-cell title="Export" value="导出 OPML" is-link :url="baseUrl + 'rss/opml.xml?userId=' + user.id" />
+      <van-cell title="Export" value="导出 OPML" is-link @click="openLink(baseUrl + 'rss/opml.xml?userId=' + user.id)" />
       <van-cell title="重置密码" is-link to="/resetpwd" />
       <van-button class="bottom-button" size="large" @click="logout">退出登录</van-button>
     </van-cell-group>
@@ -84,6 +84,9 @@
       logout() {
         window.localStorage.removeItem("user");
         window.location.href = "./";
+      },
+      openLink(url) {
+        window.open(url, '_blank');
       }
     }
   }

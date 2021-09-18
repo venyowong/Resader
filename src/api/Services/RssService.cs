@@ -4,6 +4,7 @@ using Resader.Api.Extensions;
 using Resader.Api.Factories;
 using Resader.Common.Entities;
 using Resader.Common.Extensions;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -67,6 +68,11 @@ namespace Resader.Api.Services
                 return false;
             }
 
+            articles.ForEach(a =>
+            {
+                a.CreateTime = DateTime.Now;
+                a.UpdateTime = DateTime.Now;
+            });
             this.cache.HashSet(Const.ArticlesInFeedCache + feedId, articles.ToDictionary(x => x.Id, x => x.ToJson()));
             this.cache.StringSet(Const.FeedLatestTimeCache + feedId, DateTime.Now.ToString("yyyy-MM-dd"));
             return true;
