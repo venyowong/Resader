@@ -5,7 +5,7 @@ Resader 是一个集成了后台定时数据抓取任务、API服务以及阅读
 1. 轻量，Resader 最基本的部署要求为一个 mysql 数据库以及服务本身，两者可部署在1C1G的基础机型上，并且保证服务可正常运行
 2. 可扩展，若访问量达到一定量级，Resader 可通过部署多个实例来分担访问压力，但需要注意的是，Resader 将后台定时任务与API接口放在一起开发，应该将后台定时任务配置为只有一个实例(参考 api 服务的 UseScheduler 配置，该配置表示是否启用定时任务服务)；当存在多个服务实例的时候，还需要部署 Redis 作为缓存方案，保证缓存数据的一致性，当 api 服务未配置 Redis 时会使用内存作为缓存方案
 
-## 编译部署
+## 编译部署 api 服务
 
 由于代码暂时还未稳定，因此暂不提供 release 包，可自行克隆源码本地进行编译。
 
@@ -51,6 +51,13 @@ Resader 是一个集成了后台定时数据抓取任务、API服务以及阅读
 7. 若想禁用定时任务，则在 appsettings.json 中将 UseScheduler 配置为 false
 8. 若启用了 redis，并且有多个实例，想禁用其中部分实例的数据恢复任务，则在 appsettings.json 中将 AutoRecovery 配置为 false，若缓存策略使用的是内存，则一定要为 true
 9. 若想要减少缓存空间，可以修改 appsettings.json 中的 ArticleMonths 配置，该配置表示文章数据月数，若配置为3，则只展示3个月内的文章，若配置为小于等于0，则展示全部数据
+
+## 打包 PWA 页面
+
+1. cd Resader/src/pwa
+2. npm install
+3. npm run build
+4. 将 dist 放在 api 服务的 wwwroot 下或者挂载在 nginx 服务下
 
 ## 线上 PWA 链接
 
