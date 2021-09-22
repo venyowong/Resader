@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div style="margin-bottom: 50px;">
     <van-tabs @change="onTabChange" sticky animated>
       <van-tab  v-for="label in labels" :title="label" :key="label"></van-tab>
     </van-tabs>
@@ -31,7 +31,7 @@ import common from "@/common.js";
     data() {
       return {
         user: common.getUser(),
-        labels: ["动漫", "编程", "软件"],
+        labels: ["资讯", "新闻", "动漫", "电影", "阅读", "科技", "金融", "软件", "游戏", "编程", "体育", "天文"],
         recommends: []
       }
     },
