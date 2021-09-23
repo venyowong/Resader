@@ -160,6 +160,7 @@ namespace Resader.Api.Controllers
                     Feed = f,
                     Article = rssService.GetArticles(f.Id).Result.OrderByDescending(f => f.CreateTime).FirstOrDefault()
                 })
+                .Where(f => f.Article != null)
                 .OrderByDescending(x => x.Article?.CreateTime)
                 .ToList();
             }, new TimeSpan(0, 30, 0));
