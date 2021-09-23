@@ -14,6 +14,11 @@
       </van-cell>
     </van-cell-group>
 
+    <van-cell-group title="外部链接">
+      <van-cell title="RSSHub" value="RSSHub 文档" is-link @click="openLink('https://docs.rsshub.app/')" />
+      <van-cell title="搜索" value="rsssearchhub" is-link @click="openLink('https://www.rsssearchhub.com/')" />
+    </van-cell-group>
+
     <van-cell-group title="操作">
       <van-cell title="Import" value="导入 RSS" is-link @click="showImport = true" />
       <van-cell title="Export" value="导出 OPML" is-link @click="openLink(baseUrl + 'rss/opml.xml?userId=' + user.id)" />
