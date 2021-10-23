@@ -12,6 +12,7 @@ using System.ServiceModel.Syndication;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
+using System.IO;
 
 namespace Resader.Api.Services
 {
@@ -51,21 +52,26 @@ namespace Resader.Api.Services
                     Id = feed.Md5(),
                     Url = feed
                 };
-                try
+                using (var stream = this.Client.GetStreamAsync(feed).Result)
+                using (var ms = new MemoryStream())
                 {
-                    var html = this.Client.GetStringAsync(feed).Result;
-                    cfeed = CodeHollow.FeedReader.FeedReader.ReadFromString(html);
-                    feedEntity.Title = cfeed?.Title;
-                    feedEntity.Description = cfeed?.Description;
-                    feedEntity.Image = cfeed?.ImageUrl;
+                    stream.CopyTo(ms);
+                    try
+                    {
+                        cfeed = CodeHollow.FeedReader.FeedReader.ReadFromByteArray(ms.ToArray());
+                        feedEntity.Title = cfeed?.Title;
+                        feedEntity.Description = cfeed?.Description;
+                        feedEntity.Image = cfeed?.ImageUrl;
+                    }
+                    catch
+                    {
+                        sf = SyndicationFeed.Load(XmlReader.Create(ms));
+                        feedEntity.Title = sf?.Title?.Text;
+                        feedEntity.Description = sf?.Description?.Text;
+                        feedEntity.Image = sf?.ImageUrl?.ToString();
+                    }
                 }
-                catch
-                {
-                    sf = SyndicationFeed.Load(XmlReader.Create(feed));
-                    feedEntity.Title = sf?.Title?.Text;
-                    feedEntity.Description = sf?.Description?.Text;
-                    feedEntity.Image = sf?.ImageUrl?.ToString();
-                }
+
                 if (string.IsNullOrWhiteSpace(feedEntity.Title))
                 {
                     Log.Warning($"The title of feed({feed}) is null or white space.");
