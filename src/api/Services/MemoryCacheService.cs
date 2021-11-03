@@ -131,7 +131,14 @@ namespace Resader.Api.Services
                     return;
                 }
 
-                map.Add(hashField, value);
+                if (!map.ContainsKey(hashField))
+                {
+                    map.Add(hashField, value);
+                }
+                else
+                {
+                    map[hashField] = value;
+                }
                 this.memoryCache.Set(key, map);
             });
         }

@@ -49,6 +49,8 @@ namespace Resader.Api.Controllers
 
             var articles = (await this.service.GetArticles(request.FeedId))
                 .Where(a => end != default ? a.Published < end : true)
+                .OrderByDescending(a => a.CreateTime)
+                .ThenByDescending(a => a.Title)
                 .Skip(request.Page * request.PageSize)
                 .Take(request.PageSize)
                 .Select(a => a.ToResponseModel())
@@ -145,7 +147,6 @@ namespace Resader.Api.Controllers
             return this.File(Encoding.UTF8.GetBytes(opml.ToString()), "application/xml");
         }
 
-        [JwtValidation]
         [HttpGet("RecommendFeeds")]
         public List<RecommendedFeed> RecommendFeeds(string label, [FromServices] RecommendService recommendService,
             [FromServices] RssService rssService, [FromServices] ICacheService cache)
@@ -159,6 +160,7 @@ namespace Resader.Api.Controllers
                     Feed = f,
                     Article = rssService.GetArticles(f.Id).Result.OrderByDescending(f => f.CreateTime).FirstOrDefault()
                 })
+                .Where(f => f.Article != null)
                 .OrderByDescending(x => x.Article?.CreateTime)
                 .ToList();
             }, new TimeSpan(0, 30, 0));

@@ -19,13 +19,30 @@ namespace Resader.Api.Controllers
     public class AdminController : BaseController
     {
         [HttpGet("Feeds")]
-        public List<Feed> GetFeeds([FromServices] RssService service) => service.GetFeeds();
+        public object GetFeeds([FromQuery] int page, [FromQuery] int perPage, [FromServices] RssService service)
+        {
+            var feeds = service.GetFeeds();
+            return new
+            {
+                Status = 0,
+                Msg = string.Empty,
+                Data = new
+                {
+                    Items = feeds.OrderByDescending(f => f.CreateTime)
+                        .Skip((page - 1) * perPage)
+                        .Take(perPage)
+                        .ToList(),
+                    Total = feeds.Count
+                }
+            };
+        }
 
         [HttpPost("UpdateFeed")]
         public async Task<bool> UpdateFeed([FromQuery] string id, [FromServices] RssService service)
         {
             var request = (await this.Request.ReadBody()).ToObj<Feed>();
             request.Id = id;
+            request.UpdateTime = DateTime.Now;
             return await service.UpdateFeed(request);
         }
 

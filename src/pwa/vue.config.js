@@ -1,5 +1,8 @@
 module.exports = {
-  transpileDependencies: [
-    'vuetify'
-  ]
+  publicPath: '',
+
+  pwa: {
+    name: 'Resader',
+    themeColor: '#404554'
+  }
 }

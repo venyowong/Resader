@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Options;
 using Resader.Api.Extensions;
 using Resader.Api.Factories;
 using Resader.Common.Entities;
@@ -13,15 +14,17 @@ namespace Resader.Api.Daos
     public class RssDao
     {
         private DbConnectionFactory connectionFactory;
+        private Configuration config;
 
         static RssDao()
         {
             Utility.MakeDapperMapping(typeof(Article), typeof(Feed), typeof(Subscription), typeof(ReadRecord), typeof(FeedBrowseRecord));
         }
 
-        public RssDao(DbConnectionFactory connectionFactory)
+        public RssDao(DbConnectionFactory connectionFactory, IOptions<Configuration> config)
         {
             this.connectionFactory = connectionFactory;
+            this.config = config.Value;
         }
 
         #region article
@@ -34,7 +37,15 @@ namespace Resader.Api.Daos
             }
 
             using var connection = await connectionFactory.Create();
-            return (await connection.QueryWithPolly<Article>("SELECT * FROM article WHERE feed_id=@FeedId", new { FeedId = feedId })).ToList();
+            if (config.ArticleMonths > 0)
+            {
+                return (await connection.QueryWithPolly<Article>($@"SELECT * FROM article WHERE feed_id=@FeedId AND 
+                    DATEDIFF(create_time, DATE_ADD(NOW(), INTERVAL {-config.ArticleMonths} MONTH))>=0", new { FeedId = feedId })).ToList();
+            }
+            else
+            {
+                return (await connection.QueryWithPolly<Article>("SELECT * FROM article WHERE feed_id=@FeedId", new { FeedId = feedId })).ToList();
+            }
         }
 
         public async Task<bool> InsertArticle(params Article[] articles)

@@ -1,8 +1,10 @@
-﻿using Resader.Api.Daos;
+﻿using Microsoft.Extensions.Options;
+using Resader.Api.Daos;
 using Resader.Api.Extensions;
 using Resader.Api.Factories;
 using Resader.Common.Entities;
 using Resader.Common.Extensions;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,14 +18,17 @@ namespace Resader.Api.Services
         private RecommendService recommendService;
         private DbConnectionFactory dbConnectionFactory;
         private FetchService fetchService;
+        private IOptions<Configuration> config;
 
         public RssService(ICacheService cache, RecommendService recommendService,
-            DbConnectionFactory dbConnectionFactory, FetchService fetchService)
+            DbConnectionFactory dbConnectionFactory, FetchService fetchService,
+            IOptions<Configuration> config)
         {
             this.cache = cache;
             this.dbConnectionFactory = dbConnectionFactory;
             this.recommendService = recommendService;
             this.fetchService = fetchService;
+            this.config = config;
         }
 
         #region article
@@ -38,7 +43,7 @@ namespace Resader.Api.Services
                     .ToList();
             }
 
-            var dao = new RssDao(this.dbConnectionFactory);
+            var dao = new RssDao(this.dbConnectionFactory, this.config);
             var articles = await dao.GetArticles(feedId);
             if (articles.IsNullOrEmpty())
             {
@@ -57,12 +62,17 @@ namespace Resader.Api.Services
 
             var articleList = await this.GetArticles(feedId);
             articles = articles.FindAll(a => !articleList.Any(x => x.Id == a.Id));
-            var dao = new RssDao(this.dbConnectionFactory);
+            var dao = new RssDao(this.dbConnectionFactory, this.config);
             if (!await dao.InsertArticle(articles.ToArray()))
             {
                 return false;
             }
 
+            articles.ForEach(a =>
+            {
+                a.CreateTime = DateTime.Now;
+                a.UpdateTime = DateTime.Now;
+            });
             this.cache.HashSet(Const.ArticlesInFeedCache + feedId, articles.ToDictionary(x => x.Id, x => x.ToJson()));
             this.cache.StringSet(Const.FeedLatestTimeCache + feedId, DateTime.Now.ToString("yyyy-MM-dd"));
             return true;
@@ -75,7 +85,7 @@ namespace Resader.Api.Services
                 return false;
             }
 
-            var dao = new RssDao(this.dbConnectionFactory);
+            var dao = new RssDao(this.dbConnectionFactory, this.config);
             var articles = await dao.GetArticles(feedId);
             if (!articles.IsNullOrEmpty())
             {
@@ -209,7 +219,7 @@ namespace Resader.Api.Services
 
         public async Task<bool> UpdateFeed(Feed feed)
         {
-            var dao = new RssDao(this.dbConnectionFactory);
+            var dao = new RssDao(this.dbConnectionFactory, this.config);
             if (!await dao.UpdateFeed(feed))
             {
                 return false;
@@ -223,12 +233,14 @@ namespace Resader.Api.Services
 
         public async Task<bool> AddFeed(Feed feed)
         {
-            var dao = new RssDao(this.dbConnectionFactory);
+            var dao = new RssDao(this.dbConnectionFactory, this.config);
             if (!await dao.InsertFeed(feed))
             {
                 return false;
             }
 
+            feed.CreateTime = DateTime.Now;
+            feed.UpdateTime = DateTime.Now;
             this.cache.HashSet(Const.FeedsCache, feed.Id, feed.ToJson());
             return true;
         }
@@ -277,7 +289,7 @@ namespace Resader.Api.Services
 
         public async Task<bool> AddSubscription(Subscription subscription)
         {
-            var dao = new RssDao(this.dbConnectionFactory);
+            var dao = new RssDao(this.dbConnectionFactory, this.config);
             if (subscription == null || !await dao.InsertSubscription(subscription))
             {
                 return false;
@@ -289,7 +301,7 @@ namespace Resader.Api.Services
 
         public async Task<bool> DeleteSubscriptions(string userId, List<string> feeds)
         {
-            var dao = new RssDao(this.dbConnectionFactory);
+            var dao = new RssDao(this.dbConnectionFactory, this.config);
             if (await dao.DeleteSubscriptions(feeds, userId))
             {
                 this.cache.HashDelete(Const.SubscriptionCache + userId, feeds.ToArray());

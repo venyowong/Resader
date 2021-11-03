@@ -36,6 +36,7 @@ CREATE TABLE article(
 
 ALTER TABLE article ADD INDEX feed_id_index(feed_id);
 ALTER TABLE article DROP created;
+ALTER TABLE article MODIFY url VARCHAR(500) NOT NULL;
 
 CREATE TABLE subscription(
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -59,7 +60,7 @@ CREATE TABLE user(
 ALTER TABLE user ADD role int DEFAULT 1;
 
 # 若要修改管理员密码，需要先对明文密码进行 md5 加密，然后加密字符串拼接上 salt，再进行一次 md5 加密，才能得到 password
-INSERT INTO user(id, mail, password, salt, sole, create_time, update_time) VALUES('eadafe4dcd43488ab0350e226f23195e', 'admin@admin.com', 'f3f9d460d8c3a2d4ffe31859f21c9768', '5c8d6080b70c4c3faaaa26e92b271eef', 0, now(), now());
+INSERT INTO user(id, mail, password, salt, role, create_time, update_time) VALUES('eadafe4dcd43488ab0350e226f23195e', 'admin@admin.com', 'f3f9d460d8c3a2d4ffe31859f21c9768', '5c8d6080b70c4c3faaaa26e92b271eef', 0, now(), now());
 
 CREATE TABLE readrecord(
     article_id VARCHAR(100) NOT NULL,

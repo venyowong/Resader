@@ -25,6 +25,7 @@ using Serilog.Events;
 using StackExchange.Redis;
 using Resader.Api.Daos;
 using Resader.Api.Helpers;
+using System.Net.Http;
 
 namespace Resader.Api
 {
@@ -46,7 +47,7 @@ namespace Resader.Api
             services.Configure<Configuration>(this.Configuration);
 
             var redisConfig = this.Configuration.GetSection("Redis");
-            if (redisConfig == null)
+            if (redisConfig?.Value == null)
             {
                 services.AddMemoryCache();
                 services.AddTransient<ICacheService, MemoryCacheService>();
@@ -69,7 +70,11 @@ namespace Resader.Api
                 .AddTransient<UserService>()
                 .AddTransient<RecommendDao>()
                 .AddTransient<RecommendService>();
-            services.AddHttpClient<FetchService>();
+            services.AddHttpClient<FetchService>()
+                .ConfigurePrimaryHttpMessageHandler(_ => new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+                });
 
             services.AddCors(o => o.AddPolicy("Default", builder =>
             {
