@@ -1,0 +1,125 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Resader.Api</name>
+    </assembly>
+    <members>
+        <member name="P:Resader.Api.Configuration.AutoRecovery">
+            <summary>
+            是否每次 Scheduler 重启都运行 AutoRecoveryJob
+            </summary>
+        </member>
+        <member name="P:Resader.Api.Configuration.ArticleMonths">
+            <summary>
+            文章数据月数，若配置为3，则只展示3个月内的文章
+            <para>若配置为小于等于0，则展示全部数据</para>
+            <para>该配置主要是为了减少缓存数据量，在资源不足的情况下可通过配置该字段来保证服务的正常运行</para>
+            </summary>
+        </member>
+        <member name="F:Resader.Api.Const.FeedLatestTimeCache">
+            <summary>
+            feed 最新更新时间
+            </summary>
+        </member>
+        <member name="F:Resader.Api.Const.ArticlesInFeedCache">
+            <summary>
+            feed 下所有 article
+            </summary>
+        </member>
+        <member name="F:Resader.Api.Const.ReadRecordCache">
+            <summary>
+            用户阅读记录
+            </summary>
+        </member>
+        <member name="F:Resader.Api.Const.FeedLatestBrowseTimeCache">
+            <summary>
+            用户最后一次浏览 feed 的时间
+            </summary>
+        </member>
+        <member name="M:Resader.Api.Controllers.RssController.GetArticles(Resader.Common.Api.Request.GetArticlesRequest)">
+            <summary>
+            获取在 EndTime 时间点前的文章
+            <para>EndTime 为空则返回最新文章</para>
+            </summary>
+            <param name="request"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Resader.Api.Extensions.HttpClientExtension.GetWithPolly(System.Net.Http.HttpClient,System.String,System.Int32)">
+            <summary>
+            基于 Polly 发起 GET 请求
+            </summary>
+            <param name="client"></param>
+            <param name="requestUri"></param>
+            <param name="timeout">超时时长，分钟</param>
+            <returns></returns>
+        </member>
+        <member name="M:Resader.Api.Extensions.HttpClientExtension.PostWithPolly(System.Net.Http.HttpClient,System.String,System.Object,System.Int32)">
+            <summary>
+            基于 Polly 发起 POST 请求
+            </summary>
+            <param name="client"></param>
+            <param name="requestUri"></param>
+            <param name="body"></param>
+            <param name="timeout">超时时长，分钟</param>
+            <returns></returns>
+        </member>
+        <member name="M:Resader.Api.Extensions.ServiceCollectionExtension.AddTransientBothTypes``2(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            为父类型和子类型同时添加服务实例
+            <para>避免通过父类注入的时候，无法通过子类类型查找子类对象，反之亦然</para>
+            <para>可以避免通过父类注入时，通过 GetServices 获取所有对象再查找子类时导致的内存浪费</para>
+            </summary>
+            <typeparam name="TService"></typeparam>
+            <typeparam name="TImplementation"></typeparam>
+            <param name="services"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Resader.Api.Helpers.AsyncHelper">
+            <summary>
+            Helper class to run async methods within a sync process.
+            参考链接：https://www.ryadel.com/en/asyncutil-c-helper-class-async-method-sync-result-wait/
+            </summary>
+        </member>
+        <member name="M:Resader.Api.Helpers.AsyncHelper.RunSync(System.Func{System.Threading.Tasks.Task})">
+            <summary>
+            Executes an async Task method which has a void return value synchronously
+            USAGE: AsyncUtil.RunSync(() => AsyncMethod());
+            </summary>
+            <param name="task">Task method to execute</param>
+        </member>
+        <member name="M:Resader.Api.Helpers.AsyncHelper.RunSync``1(System.Func{System.Threading.Tasks.Task{``0}})">
+            <summary>
+            Executes an async Task_T method which has a T return type synchronously
+            USAGE: T result = AsyncUtil.RunSync(() => AsyncMethod_T());
+            </summary>
+            <typeparam name="TResult">Return Type</typeparam>
+            <param name="task">Task_T method to execute</param>
+            <returns></returns>
+        </member>
+        <member name="F:Resader.Api.PollyPolicies._sqlExceptionErrorCodes">
+            <summary>
+            -2 timeout   -1、2、53 与服务器建立连接发生异常
+            </summary>
+        </member>
+        <member name="M:Resader.Api.Quartz.IScheduledJob.GetJobDetail">
+            <summary>
+            必须调用 JobBuilder.StoreDurably
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Resader.Api.Quartz.IScheduledJob.GetTriggers">
+            <summary>
+            不同的触发规则需要返回不同的 Trigger
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Resader.Api.Utility.MakeDapperMapping(System.Type[])">
+            <summary>
+            由于 MakeDapperMapping(string namspace) 在 Startup.Configure 的最后才调用
+            <para>服务启动之后定时任务立即执行的情况下，可能还未完成映射，会导致部分字段的 Column 特性无法生效</para>
+            <para>因此额外提供该方法，可用于数据库操作之前先对部分 Type 进行映射</para>
+            </summary>
+            <param name="types"></param>
+        </member>
+    </members>
+</doc>
