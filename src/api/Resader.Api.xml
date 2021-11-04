@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <doc>
     <assembly>
-        <name>Resader.Api</name>
+        <name>Resader</name>
     </assembly>
     <members>
         <member name="P:Resader.Api.Configuration.AutoRecovery">

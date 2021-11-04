@@ -65,6 +65,13 @@ Resader 是一个集成了后台定时数据抓取任务、API服务以及阅读
 3. npm run build
 4. 将 dist 放在 api 服务的 wwwroot 下或者挂载在 nginx 服务下
 
+## 使用 Release 包运行
+
+1. 从 [Release](https://github.com/venyowong/Resader/releases) 页面下载对应的程序包
+2. 执行 Release 文件
+3. 浏览器打开 http://localhost:5303/pwa 以访问 RSS 阅读器页面
+4. 浏览器打开 http://localhost:5303/admin 以访问后台管理页面
+
 ## 线上 PWA 链接
 
 https://venyo.cn/resader/pwa/
