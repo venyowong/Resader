@@ -58,6 +58,15 @@ CREATE TABLE user(
 );
 
 ALTER TABLE user ADD role int DEFAULT 1;
+ALTER TABLE user ADD oauth_id VARCHAR(100);
+ALTER TABLE user ADD name VARCHAR(100);
+ALTER TABLE user ADD avatar_url VARCHAR(500);
+ALTER TABLE user ADD source VARCHAR(50) NOT NULL DEFAULT 'resader';
+ALTER TABLE user ADD url VARCHAR(500);
+ALTER TABLE user ADD location VARCHAR(50);
+ALTER TABLE user ADD company VARCHAR(50);
+ALTER TABLE user ADD blog VARCHAR(500);
+ALTER TABLE user ADD bio VARCHAR(200);
 
 # 若要修改管理员密码，需要先对明文密码进行 md5 加密，然后加密字符串拼接上 salt，再进行一次 md5 加密，才能得到 password
 INSERT INTO user(id, mail, password, salt, role, create_time, update_time) VALUES('eadafe4dcd43488ab0350e226f23195e', 'admin@admin.com', 'f3f9d460d8c3a2d4ffe31859f21c9768', '5c8d6080b70c4c3faaaa26e92b271eef', 0, now(), now());

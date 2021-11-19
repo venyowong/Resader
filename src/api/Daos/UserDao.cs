@@ -1,3 +1,4 @@
+using OpenSecurity.Oauth;
 using Resader.Api.Extensions;
 using Resader.Api.Factories;
 using Resader.Common.Entities;
@@ -47,7 +48,7 @@ namespace Resader.Api.Daos
 
         public async Task<bool> CreateUser(string id, string mail, string password)
         {
-            if (string.IsNullOrWhiteSpace(mail) || string.IsNullOrWhiteSpace(password))
+            if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(mail) || string.IsNullOrWhiteSpace(password))
             {
                 return false;
             }
@@ -83,6 +84,36 @@ namespace Resader.Api.Daos
         {
             using var connection = await connectionFactory.Create();
             return await connection.QueryWithPolly<User>("SELECT * FROM user");
+        }
+
+        public async Task<bool> CreateUser(User user)
+        {
+            if (user == null)
+            {
+                return false;
+            }
+
+            using var connection = await connectionFactory.Create();
+            var salt = Guid.NewGuid().ToString("N");
+            var password = Guid.NewGuid().ToString("N").Md5();
+            return await connection.ExecuteWithPolly(@"INSERT INTO user(id, mail, password, salt, create_time, update_time, oauth_id, name,
+                avatar_url, source, url, location, company, blog, bio) VALUES(@Id, @Mail, @password, @salt, now(), now(), @OauthId, @Name,
+                @AvatarUrl, @Source, @Url, @Location, @Company, @Blog, @Bio);", new
+            {
+                user.Id,
+                user.Mail,
+                salt,
+                password = $"{password}{salt}".Md5(),
+                user.OauthId,
+                user.Name,
+                user.AvatarUrl,
+                user.Source,
+                user.Url,
+                user.Location,
+                user.Company,
+                user.Blog,
+                user.Bio
+            });
         }
     }
 }

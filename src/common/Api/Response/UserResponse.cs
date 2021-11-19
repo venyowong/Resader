@@ -13,5 +13,26 @@ namespace Resader.Common.Api.Response
         public string Token { get; set; }
 
         public int Role { get; set; }
+
+        /// <summary>
+        /// 三方 id
+        /// </summary>
+        public string OauthId { get; set; }
+
+        public string Name { get; set; }
+
+        public string AvatarUrl { get; set; }
+
+        public string Source { get; set; }
+
+        public string Url { get; set; }
+
+        public string Location { get; set; }
+
+        public string Company { get; set; }
+
+        public string Blog { get; set; }
+
+        public string Bio { get; set; }
     }
 }

@@ -37,7 +37,7 @@ namespace Resader.Api.Controllers
                 return Result<UserResponse>.Fail(1, "密码错误");
             }
 
-            return Result.Success(this.GetToken(user));
+            return Result.Success(this.service.GetToken(user));
         }
 
         [JwtValidation]
@@ -78,7 +78,7 @@ namespace Resader.Api.Controllers
             var id = Guid.NewGuid().ToString("N");
             if (await dao.CreateUser(id, request.Mail, request.Password))
             {
-                return Result.Success(this.GetToken(new User
+                return Result.Success(this.service.GetToken(new User
                 {
                     Id = id,
                     Mail = request.Mail
@@ -88,15 +88,16 @@ namespace Resader.Api.Controllers
             return Result<UserResponse>.Fail(2);
         }
 
-        private UserResponse GetToken(User user)
+        [HttpGet("GetUserInfoBySession")]
+        public Result<UserResponse> GetUserInfoBySession([FromQuery] [Required] string session)
         {
-            return new UserResponse
+            var response = this.service.GetTokenBySession(session);
+            if (response == null)
             {
-                Id = user.Id,
-                Mail = user.Mail,
-                Token = JwtService.GetToken(user),
-                Role = user.Role
-            };
+                return Result<UserResponse>.Fail(1, "session 已过期");
+            }
+
+            return Result.Success(response);
         }
     }
 }

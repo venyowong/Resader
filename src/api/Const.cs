@@ -38,5 +38,7 @@ namespace Resader.Api
         public const string LabeledFeedsCache = "Resader:Api:LabeledFeeds:";
 
         public const string RecommendedFeedsCache = "Resader:Api:RecommendedFeeds:";
+
+        public const string TokenSessionCache = "Resader:Api:Token:";
     }
 }

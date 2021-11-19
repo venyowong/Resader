@@ -19,6 +19,11 @@ namespace Resader.Api
         /// <para>该配置主要是为了减少缓存数据量，在资源不足的情况下可通过配置该字段来保证服务的正常运行</para>
         /// </summary>
         public int ArticleMonths { get; set; }
+
+        /// <summary>
+        /// oauth 授权后的登录页面地址
+        /// </summary>
+        public string OauthLoginUrl { get; set; }
     }
 
     public class LoggingConfig
