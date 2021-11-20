@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31005.135
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Resader.Api", "api\Resader.Api.csproj", "{4A923AA2-4A10-44FC-BACE-45227ECFF369}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Resader", "api\Resader.csproj", "{4A923AA2-4A10-44FC-BACE-45227ECFF369}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Resader.Common", "common\Resader.Common.csproj", "{13EA7BD4-E06F-4141-B2B4-A37E90754A8E}"
 EndProject
