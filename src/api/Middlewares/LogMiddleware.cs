@@ -4,32 +4,30 @@ using Microsoft.AspNetCore.Http;
 using Serilog;
 using Serilog.Context;
 
-namespace Resader.Api.Middlewares
+namespace Resader.Api.Middlewares;
+public class LogMiddleware
 {
-    public class LogMiddleware
+    private readonly RequestDelegate next;
+
+    public LogMiddleware(RequestDelegate next)
     {
-        private readonly RequestDelegate next;
+        this.next = next;
+    }
 
-        public LogMiddleware(RequestDelegate next)
+    public async Task InvokeAsync(HttpContext context)
+    {
+        using (LogContext.PushProperty("TraceId", context.TraceIdentifier))
         {
-            this.next = next;
-        }
-
-        public async Task InvokeAsync(HttpContext context)
-        {
-            using (LogContext.PushProperty("TraceId", context.TraceIdentifier))
+            try
             {
-                try
-                {
-                    await this.next(context);
-                }
-                catch (Exception e)
-                {
-                    context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-                    context.Response.ContentType = "application/json";
-                    Log.Error(e, "an error occure");
-                    await context.Response.WriteAsync("an error occure");
-                }
+                await this.next(context);
+            }
+            catch (Exception e)
+            {
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                context.Response.ContentType = "application/json";
+                Log.Error(e, "an error occure");
+                await context.Response.WriteAsync("an error occure");
             }
         }
     }

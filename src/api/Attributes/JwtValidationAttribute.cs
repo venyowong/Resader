@@ -1,46 +1,42 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Resader.Api.Services;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
-namespace Resader.Api.Attributes
+namespace Resader.Api.Attributes;
+
+public class JwtValidationAttribute : ActionFilterAttribute
 {
-    public class JwtValidationAttribute : ActionFilterAttribute
+    private int role;
+
+    public JwtValidationAttribute(int role = 1)
     {
-        private int role;
+        this.role = role;
+    }
 
-        public JwtValidationAttribute(int role = 1)
+    public override void OnActionExecuting(ActionExecutingContext context)
+    {
+        if (!context.HttpContext.Request.Headers.TryGetValue("token", out var value) || !value.Any())
         {
-            this.role = role;
+            context.Result = new StatusCodeResult(401);
+            return;
+        }
+        var token = value.First();
+        var obj = JwtService.ParseToken(token);
+        if (obj == null)
+        {
+            context.Result = new StatusCodeResult(401);
+            return;
         }
 
-        public override void OnActionExecuting(ActionExecutingContext context)
+        if (this.role == 0 && (int)obj["role"] != 0)
         {
-            if (!context.HttpContext.Request.Headers.TryGetValue("token", out var value) || !value.Any())
-            {
-                context.Result = new StatusCodeResult(401);
-                return;
-            }
-            var token = value.First();
-            var obj = JwtService.ParseToken(token);
-            if (obj == null)
-            {
-                context.Result = new StatusCodeResult(401);
-                return;
-            }
-
-            if (this.role == 0 && (int)obj["role"] != 0)
-            {
-                context.Result = new StatusCodeResult(401);
-                return;
-            }
-
-            context.HttpContext.Items.Add("token", obj);
-
-            base.OnActionExecuting(context);
+            context.Result = new StatusCodeResult(401);
+            return;
         }
+
+        context.HttpContext.Items.Add("token", obj);
+
+        base.OnActionExecuting(context);
     }
 }

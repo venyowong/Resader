@@ -8,88 +8,86 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Resader.Api.Jobs
+namespace Resader.Api.Jobs;
+[DisallowConcurrentExecution]
+public class SaveRecordJob : IJob, IScheduledJob
 {
-    [DisallowConcurrentExecution]
-    public class SaveRecordJob : IJob, IScheduledJob
+    private UserDao userDao;
+    private RssDao rssDao;
+    private RssService rssService;
+
+    public SaveRecordJob(UserDao userDao, RssDao rssDao, RssService rssService)
     {
-        private UserDao userDao;
-        private RssDao rssDao;
-        private RssService rssService;
+        this.userDao = userDao;
+        this.rssDao = rssDao;
+        this.rssService = rssService;
+    }
 
-        public SaveRecordJob(UserDao userDao, RssDao rssDao, RssService rssService)
+    public async Task Execute(IJobExecutionContext context)
+    {
+        var timeStr = string.Empty;
+        if (File.Exists("SaveRecordTime.txt"))
         {
-            this.userDao = userDao;
-            this.rssDao = rssDao;
-            this.rssService = rssService;
+            timeStr = File.ReadAllText("SaveRecordTime.txt");
         }
-
-        public async Task Execute(IJobExecutionContext context)
+        DateTime.TryParse(timeStr, out var time);
+        var users = await this.userDao.GetUsers();
+        foreach (var u in users)
         {
-            var timeStr = string.Empty;
-            if (File.Exists("SaveRecordTime.txt"))
+            #region 阅读记录
+            var readRecords = this.rssService.GetReadRecords(u.Id);
+            foreach (var r in readRecords.Where(x => time == default ? true : x.CreateTime >= time.AddMinutes(-10)))
             {
-                timeStr = File.ReadAllText("SaveRecordTime.txt");
+                if ((await this.rssDao.GetReadRecord(r.UserId, r.ArticleId)) == null)
+                {
+                    await this.rssDao.InsertReadRecord(r);
+                }
+                else
+                {
+                    await this.rssDao.UpdateReadRecord(r);
+                }
             }
-            DateTime.TryParse(timeStr, out var time);
-            var users = await this.userDao.GetUsers();
-            foreach (var u in users)
+            #endregion
+
+            #region feed 浏览记录
+            var browseRecords = this.rssService.GetFeedBrowseRecords(u.Id);
+            foreach (var r in browseRecords.Where(x => time == default ? true : x.CreateTime >= time.AddMinutes(-10)))
             {
-                #region 阅读记录
-                var readRecords = this.rssService.GetReadRecords(u.Id);
-                foreach (var r in readRecords.Where(x => time == default ? true : x.CreateTime >= time.AddMinutes(-10)))
+                if ((await this.rssDao.GetFeedBrowseRecord(r.UserId, r.FeedId)) == null)
                 {
-                    if ((await this.rssDao.GetReadRecord(r.UserId, r.ArticleId)) == null)
-                    {
-                        await this.rssDao.InsertReadRecord(r);
-                    }
-                    else
-                    {
-                        await this.rssDao.UpdateReadRecord(r);
-                    }
+                    await this.rssDao.InsertFeedBrowseRecord(r);
                 }
-                #endregion
-
-                #region feed 浏览记录
-                var browseRecords = this.rssService.GetFeedBrowseRecords(u.Id);
-                foreach (var r in browseRecords.Where(x => time == default ? true : x.CreateTime >= time.AddMinutes(-10)))
+                else
                 {
-                    if ((await this.rssDao.GetFeedBrowseRecord(r.UserId, r.FeedId)) == null)
-                    {
-                        await this.rssDao.InsertFeedBrowseRecord(r);
-                    }
-                    else
-                    {
-                        await this.rssDao.UpdateFeedBrowseRecord(r);
-                    }
+                    await this.rssDao.UpdateFeedBrowseRecord(r);
                 }
-                #endregion
             }
-
-            File.WriteAllText("SaveRecordTime.txt", DateTime.Now.ToString());
+            #endregion
         }
 
-        public IJobDetail GetJobDetail()
-        {
-            return JobBuilder.Create<SaveRecordJob>()
-                .WithIdentity("SaveReadRecordJob", "Resader")
-                .StoreDurably()
-                .Build();
-        }
+        File.WriteAllText("SaveRecordTime.txt", DateTime.Now.ToString());
+    }
 
-        public IEnumerable<ITrigger> GetTriggers()
-        {
-            yield return TriggerBuilder.Create()
-                .WithIdentity("SaveReadRecordJob_Trigger1", "Resader")
-                .WithCronSchedule("0 */5 * * * ?")
-                .ForJob("SaveReadRecordJob", "Resader")
-                .Build();
+    public IJobDetail GetJobDetail()
+    {
+        return JobBuilder.Create<SaveRecordJob>()
+            .WithIdentity("SaveReadRecordJob", "Resader")
+            .StoreDurably()
+            .Build();
+    }
 
-            yield return TriggerBuilder.Create()
-                .WithIdentity("SaveReadRecordJob_RightNow", "Resader")
-                .StartNow()
-                .ForJob("SaveReadRecordJob", "Resader")
-                .Build();
-        }
+    public IEnumerable<ITrigger> GetTriggers()
+    {
+        yield return TriggerBuilder.Create()
+            .WithIdentity("SaveReadRecordJob_Trigger1", "Resader")
+            .WithCronSchedule("0 */5 * * * ?")
+            .ForJob("SaveReadRecordJob", "Resader")
+            .Build();
+
+        yield return TriggerBuilder.Create()
+            .WithIdentity("SaveReadRecordJob_RightNow", "Resader")
+            .StartNow()
+            .ForJob("SaveReadRecordJob", "Resader")
+            .Build();
     }
 }

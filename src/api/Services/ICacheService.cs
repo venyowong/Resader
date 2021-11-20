@@ -3,30 +3,29 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Resader.Api.Services
+namespace Resader.Api.Services;
+
+public interface ICacheService
 {
-    public interface ICacheService
-    {
-        void HashSet(string key, Dictionary<string, string> hashFields);
+    void HashSet(string key, Dictionary<string, string> hashFields);
 
-        void HashSet(string key, string hashField, string value);
+    void HashSet(string key, string hashField, string value);
 
-        Dictionary<string, string> HashGetAll(string key);
+    Dictionary<string, string> HashGetAll(string key);
 
-        Dictionary<string, string> HashGet(string key, string[] hashFields);
+    Dictionary<string, string> HashGet(string key, string[] hashFields);
 
-        string HashGet(string key, string hashField);
+    string HashGet(string key, string hashField);
 
-        string StringGet(string key);
+    string StringGet(string key);
 
-        void StringSet(string key, string value, TimeSpan? expiry = null);
+    void StringSet(string key, string value, TimeSpan? expiry = null);
 
-        bool DeleteKey(string key);
+    bool DeleteKey(string key);
 
-        void HashDelete(string key, string[] hashFields);
+    void HashDelete(string key, string[] hashFields);
 
-        void HashDelete(string key, string hashField);
+    void HashDelete(string key, string hashField);
 
-        T GetWithInit<T>(string key, Func<T> init, TimeSpan? expiry = null) where T : class;
-    }
+    T GetWithInit<T>(string key, Func<T> init, TimeSpan? expiry = null) where T : class;
 }

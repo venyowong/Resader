@@ -1,169 +1,167 @@
 ﻿using Resader.Api.Daos;
 using Resader.Common.Entities;
 using Resader.Common.Extensions;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Resader.Api.Services
+namespace Resader.Api.Services;
+
+public class RecommendService
 {
-    public class RecommendService
+    private ICacheService cache;
+    private RecommendDao dao;
+
+    public RecommendService(ICacheService cache, RecommendDao dao)
     {
-        private ICacheService cache;
-        private RecommendDao dao;
+        this.cache = cache;
+        this.dao = dao;
+    }
 
-        public RecommendService(ICacheService cache, RecommendDao dao)
+    public void UpdateFeedLabel(Feed feed, string oldLabel)
+    {
+        if (string.IsNullOrWhiteSpace(feed?.Label))
         {
-            this.cache = cache;
-            this.dao = dao;
+            return;
         }
 
-        public void UpdateFeedLabel(Feed feed, string oldLabel)
+        var recommendLabels = new List<string>();
+        if (!string.IsNullOrWhiteSpace(oldLabel))
         {
-            if (string.IsNullOrWhiteSpace(feed?.Label))
+            foreach (var label in oldLabel.Split(',', '，', ';', '；'))
             {
-                return;
-            }
-
-            var recommendLabels = new List<string>();
-            if (!string.IsNullOrWhiteSpace(oldLabel))
-            {
-                foreach (var label in oldLabel.Split(',', '，', ';', '；'))
+                var f = this.GetLabeledFeed(label, feed.Id);
+                if (f != null && f.Recommend)
                 {
-                    var f = this.GetLabeledFeed(label, feed.Id);
-                    if (f != null && f.Recommend)
-                    {
-                        recommendLabels.Add(label);
-                    }
-                    this.cache.HashDelete(Const.LabeledFeedsCache + label, feed.Id);
+                    recommendLabels.Add(label);
                 }
-            }
-
-            if (!string.IsNullOrWhiteSpace(feed.Label))
-            {
-                var labels = this.GetLabels();
-                foreach (var label in feed.Label.Split(',', '，', ';', '；'))
-                {
-                    if (!labels.Contains(label))
-                    {
-                        labels.Add(label);
-                    }
-
-                    if (recommendLabels.Contains(label))
-                    {
-                        feed.Recommend = true;
-                    }
-                    else
-                    {
-                        feed.Recommend = false;
-                    }
-                    this.cache.HashSet(Const.LabeledFeedsCache + label, feed.Id, feed.ToJson());
-                }
-
-                this.cache.StringSet(Const.LabelsCache, labels.ToJson().GZipCompress());
+                this.cache.HashDelete(Const.LabeledFeedsCache + label, feed.Id);
             }
         }
 
-        public async Task RefreshLabels(List<Feed> feeds)
+        if (!string.IsNullOrWhiteSpace(feed.Label))
         {
-            if (feeds.IsNullOrEmpty())
+            var labels = this.GetLabels();
+            foreach (var label in feed.Label.Split(',', '，', ';', '；'))
             {
-                return;
-            }
-
-            var recommends = await this.dao.GetRecommends();
-            var labels = new List<string>();
-            foreach (var feed in feeds)
-            {
-                if (string.IsNullOrWhiteSpace(feed.Label))
+                if (!labels.Contains(label))
                 {
-                    continue;
+                    labels.Add(label);
                 }
 
-                foreach (var label in feed.Label.Split(',', '，', ';', '；'))
+                if (recommendLabels.Contains(label))
                 {
-                    if (!labels.Contains(label))
-                    {
-                        labels.Add(label);
-                    }
-
-                    if (recommends.Any(x => x.FeedId == feed.Id && x.Label == label))
-                    {
-                        feed.Recommend = true;
-                    }
-                    else
-                    {
-                        feed.Recommend = false;
-                    }
-                    this.cache.HashSet(Const.LabeledFeedsCache + label, feed.Id, feed.ToJson());
+                    feed.Recommend = true;
                 }
+                else
+                {
+                    feed.Recommend = false;
+                }
+                this.cache.HashSet(Const.LabeledFeedsCache + label, feed.Id, feed.ToJson());
             }
 
             this.cache.StringSet(Const.LabelsCache, labels.ToJson().GZipCompress());
         }
+    }
 
-        public List<string> GetLabels()
+    public async Task RefreshLabels(List<Feed> feeds)
+    {
+        if (feeds.IsNullOrEmpty())
         {
-            var result = this.cache.StringGet(Const.LabelsCache).GZipDecompress().ToObj<List<string>>();
-            if (result == null)
-            {
-                result = new List<string>();
-            }
-            return result;
+            return;
         }
 
-        public Feed GetLabeledFeed(string label, string feedId) => this.cache.HashGet(Const.LabeledFeedsCache + label, feedId).ToObj<Feed>();
-
-        public List<Feed> GetLabeledFeeds(string label) => 
-            this.cache.HashGetAll(Const.LabeledFeedsCache + label)
-                .Select(p => p.Value.ToObj<Feed>())
-                .ToList();
-
-        public async Task<bool> RecommendFeed(string label, string feedId)
+        var recommends = await this.dao.GetRecommends();
+        var labels = new List<string>();
+        foreach (var feed in feeds)
         {
-            var feed = this.GetLabeledFeed(label, feedId);
-            if (feed == null)
+            if (string.IsNullOrWhiteSpace(feed.Label))
             {
-                return false;
+                continue;
             }
 
-            if (feed.Recommend)
+            foreach (var label in feed.Label.Split(',', '，', ';', '；'))
             {
-                return true;
-            }
+                if (!labels.Contains(label))
+                {
+                    labels.Add(label);
+                }
 
-            if (!await this.dao.InsertRecommend(label, feedId))
-            {
-                return false;
+                if (recommends.Any(x => x.FeedId == feed.Id && x.Label == label))
+                {
+                    feed.Recommend = true;
+                }
+                else
+                {
+                    feed.Recommend = false;
+                }
+                this.cache.HashSet(Const.LabeledFeedsCache + label, feed.Id, feed.ToJson());
             }
+        }
 
-            feed.Recommend = true;
-            this.cache.HashSet(Const.LabeledFeedsCache + label, feed.Id, feed.ToJson());
+        this.cache.StringSet(Const.LabelsCache, labels.ToJson().GZipCompress());
+    }
+
+    public List<string> GetLabels()
+    {
+        var result = this.cache.StringGet(Const.LabelsCache).GZipDecompress().ToObj<List<string>>();
+        if (result == null)
+        {
+            result = new List<string>();
+        }
+        return result;
+    }
+
+    public Feed GetLabeledFeed(string label, string feedId) => this.cache.HashGet(Const.LabeledFeedsCache + label, feedId).ToObj<Feed>();
+
+    public List<Feed> GetLabeledFeeds(string label) =>
+        this.cache.HashGetAll(Const.LabeledFeedsCache + label)
+            .Select(p => p.Value.ToObj<Feed>())
+            .ToList();
+
+    public async Task<bool> RecommendFeed(string label, string feedId)
+    {
+        var feed = this.GetLabeledFeed(label, feedId);
+        if (feed == null)
+        {
+            return false;
+        }
+
+        if (feed.Recommend)
+        {
             return true;
         }
 
-        public async Task<bool> DerecommendFeed(string label, string feedId)
+        if (!await this.dao.InsertRecommend(label, feedId))
         {
-            var feed = this.GetLabeledFeed(label, feedId);
-            if (feed == null)
-            {
-                return false;
-            }
+            return false;
+        }
 
-            if (!feed.Recommend)
-            {
-                return true;
-            }
+        feed.Recommend = true;
+        this.cache.HashSet(Const.LabeledFeedsCache + label, feed.Id, feed.ToJson());
+        return true;
+    }
 
-            if (!await this.dao.DeleteRecommend(label, feedId))
-            {
-                return false;
-            }
+    public async Task<bool> DerecommendFeed(string label, string feedId)
+    {
+        var feed = this.GetLabeledFeed(label, feedId);
+        if (feed == null)
+        {
+            return false;
+        }
 
-            feed.Recommend = false;
-            this.cache.HashSet(Const.LabeledFeedsCache + label, feed.Id, feed.ToJson());
+        if (!feed.Recommend)
+        {
             return true;
         }
+
+        if (!await this.dao.DeleteRecommend(label, feedId))
+        {
+            return false;
+        }
+
+        feed.Recommend = false;
+        this.cache.HashSet(Const.LabeledFeedsCache + label, feed.Id, feed.ToJson());
+        return true;
     }
 }

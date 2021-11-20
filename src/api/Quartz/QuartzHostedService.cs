@@ -10,84 +10,83 @@ using Quartz.Impl.Triggers;
 using Quartz.Spi;
 using Serilog;
 
-namespace Resader.Api.Quartz
-{
-    public class QuartzHostedService : IHostedService
-    {
-        private StdSchedulerFactory schedulerFactory;
-        private IScheduler scheduler;
-        private IEnumerable<IScheduledJob> jobs;
-        private IJobFactory jobFactory;
+namespace Resader.Api.Quartz;
 
-        public QuartzHostedService(IEnumerable<IScheduledJob> jobs, IJobFactory jobFactory)
+public class QuartzHostedService : IHostedService
+{
+    private StdSchedulerFactory schedulerFactory;
+    private IScheduler scheduler;
+    private IEnumerable<IScheduledJob> jobs;
+    private IJobFactory jobFactory;
+
+    public QuartzHostedService(IEnumerable<IScheduledJob> jobs, IJobFactory jobFactory)
+    {
+        this.schedulerFactory = new StdSchedulerFactory();
+        this.jobs = jobs;
+        this.jobFactory = jobFactory;
+        Log.Debug("QuartzHostedService inited.");
+    }
+
+    public async Task StartAsync(CancellationToken cancellationToken)
+    {
+        this.scheduler = await this.schedulerFactory.GetScheduler();
+        this.scheduler.JobFactory = this.jobFactory;
+        this.scheduler.ListenerManager.AddTriggerListener(new CommonTriggerListener(), GroupMatcher<TriggerKey>.AnyGroup());
+        await this.scheduler.Start();
+        Log.Debug("QuartzHostedService.Scheduler started.");
+
+        if (this.jobs == null || !this.jobs.Any())
         {
-            this.schedulerFactory = new StdSchedulerFactory();
-            this.jobs = jobs;
-            this.jobFactory = jobFactory;
-            Log.Debug("QuartzHostedService inited.");
+            Log.Warning("QuartzHostedService no jobs found.");
+            return;
         }
 
-        public async Task StartAsync(CancellationToken cancellationToken)
+        foreach (var job in this.jobs)
         {
-            this.scheduler = await this.schedulerFactory.GetScheduler();
-            this.scheduler.JobFactory = this.jobFactory;
-            this.scheduler.ListenerManager.AddTriggerListener(new CommonTriggerListener(), GroupMatcher<TriggerKey>.AnyGroup());
-            await this.scheduler.Start();
-            Log.Debug("QuartzHostedService.Scheduler started.");
-
-            if (this.jobs == null || !this.jobs.Any())
+            var jobDetail = job.GetJobDetail();
+            if (jobDetail != null)
             {
-                Log.Warning("QuartzHostedService no jobs found.");
-                return;
-            }
+                await this.scheduler.AddJob(jobDetail, true);
+                Log.Debug(string.Format("Add job({0}) into the scheduler.", jobDetail.Key));
 
-            foreach (var job in this.jobs)
-            {
-                var jobDetail = job.GetJobDetail();
-                if (jobDetail != null)
+                var triggers = job.GetTriggers();
+                if (triggers != null)
                 {
-                    await this.scheduler.AddJob(jobDetail, true);
-                    Log.Debug(string.Format("Add job({0}) into the scheduler.", jobDetail.Key));
-
-                    var triggers = job.GetTriggers();
-                    if (triggers != null)
+                    foreach (var trigger in triggers)
                     {
-                        foreach (var trigger in triggers)
-                        {
-                            await this.scheduler.ScheduleJob(trigger);
-                            Log.Debug(string.Format("Schedule the job({0}) with trigger({1})", trigger.JobKey, GetTriggerDesc(trigger)));
-                        }
+                        await this.scheduler.ScheduleJob(trigger);
+                        Log.Debug(string.Format("Schedule the job({0}) with trigger({1})", trigger.JobKey, GetTriggerDesc(trigger)));
                     }
                 }
             }
         }
+    }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        return this.scheduler.Shutdown();
+    }
+
+    private string GetTriggerDesc(ITrigger trigger)
+    {
+        if (trigger == null)
         {
-            return this.scheduler.Shutdown();
+            return string.Empty;
         }
 
-        private string GetTriggerDesc(ITrigger trigger)
+        if (trigger is CronTriggerImpl)
         {
-            if (trigger == null)
-            {
-                return string.Empty;
-            }
-
-            if (trigger is CronTriggerImpl)
-            {
-                var cronTrigger = trigger as CronTriggerImpl;
-                return string.Format("Key: {0} Cron: {1}", cronTrigger.Key, cronTrigger.CronExpressionString);
-            }
-            else if (trigger is SimpleTriggerImpl)
-            {
-                var simpleTrigger = trigger as SimpleTriggerImpl;
-                return string.Format("Key: {0} Interval: {1} Count: {2}", simpleTrigger.Key, simpleTrigger.RepeatInterval, simpleTrigger.RepeatCount);
-            }
-            else
-            {
-                return string.Format("Key: {0}", trigger.Key);
-            }
+            var cronTrigger = trigger as CronTriggerImpl;
+            return string.Format("Key: {0} Cron: {1}", cronTrigger.Key, cronTrigger.CronExpressionString);
+        }
+        else if (trigger is SimpleTriggerImpl)
+        {
+            var simpleTrigger = trigger as SimpleTriggerImpl;
+            return string.Format("Key: {0} Interval: {1} Count: {2}", simpleTrigger.Key, simpleTrigger.RepeatInterval, simpleTrigger.RepeatCount);
+        }
+        else
+        {
+            return string.Format("Key: {0}", trigger.Key);
         }
     }
 }
