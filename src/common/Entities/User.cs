@@ -12,10 +12,8 @@ namespace Resader.Common.Entities
 
         public string Mail { get; set; }
 
-        [JsonIgnore]
         public string Password { get; set; }
 
-        [JsonIgnore]
         public string Salt { get; set; }
 
         /// <summary>
