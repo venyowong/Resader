@@ -16,6 +16,8 @@ using Quartz.Spi;
 using StackExchange.Redis;
 using Resader.Api.Daos;
 using System.Net.Http;
+using Resader.Services;
+using OpenSecurity.Oauth;
 
 namespace Resader.Api;
 
@@ -53,13 +55,16 @@ public class Startup
             services.AddTransient<ICacheService, RedisService>();
         }
 
-        services.AddSingleton<DbConnectionFactory>();
-        services.AddTransient<UserDao>()
+        services.AddOauth();
+
+        services.AddSingleton<DbConnectionFactory>()
+            .AddTransient<UserDao>()
             .AddTransient<RssDao>()
             .AddTransient<RssService>()
             .AddTransient<UserService>()
             .AddTransient<RecommendDao>()
-            .AddTransient<RecommendService>();
+            .AddTransient<RecommendService>()
+            .AddTransient<ILogin, LoginService>();
         services.AddHttpClient<FetchService>()
             .ConfigurePrimaryHttpMessageHandler(_ => new HttpClientHandler
             {
@@ -93,13 +98,17 @@ public class Startup
             app.UseOpenApi();
             app.UseSwaggerUi3();
         }
+
+        app.UsePathBase("/resader");
+
         var options = new DefaultFilesOptions();
         options.DefaultFileNames.Clear();
         options.DefaultFileNames.Add("index.html");
         app.UseDefaultFiles(options);
         app.UseStaticFiles();
 
-        app.UseMiddleware<LogMiddleware>();
+        app.UseMiddleware<LogMiddleware>()
+            .UseOauth();
 
         app.UseIpRateLimiting();
 

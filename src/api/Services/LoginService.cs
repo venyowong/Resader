@@ -5,6 +5,7 @@ using Resader.Api;
 using Resader.Api.Daos;
 using Resader.Api.Services;
 using Resader.Common.Entities;
+using Resader.Common.Helpers;
 using System;
 using System.Net;
 using System.Threading.Tasks;
@@ -35,8 +36,20 @@ public class LoginService : ILogin
         var userInfo = await this.userService.GetUserByMail(user.Mail);
         if (userInfo != null)
         {
+            userInfo.AvatarUrl = user.AvatarUrl;
+            userInfo.Bio = user.Bio;
+            userInfo.Blog = user.Blog;
+            userInfo.Company = user.Company;
+            userInfo.Location = user.Location;
+            userInfo.Name = user.Name;
+            userInfo.OauthId = user.Id;
+            userInfo.Source = user.Source;
+            await this.userService.UpdateUser(userInfo);
+
             var session = this.userService.GetTokenSession(userInfo);
-            context.Response.Redirect($"{this.config.OauthLoginUrl}?code=0&session={session}");
+            var url = UrlHelper.AddParamIntoQuery(this.config.OauthLoginUrl, "code", "0");
+            url = UrlHelper.AddParamIntoQuery(url, "session", session);
+            context.Response.Redirect(url);
             return;
         }
 
@@ -57,7 +70,9 @@ public class LoginService : ILogin
         if (await this.userDao.CreateUser(userInfo))
         {
             var session = this.userService.GetTokenSession(userInfo);
-            context.Response.Redirect($"{this.config.OauthLoginUrl}?code=0&session={session}");
+            var url = UrlHelper.AddParamIntoQuery(this.config.OauthLoginUrl, "code", "0");
+            url = UrlHelper.AddParamIntoQuery(url, "session", session);
+            context.Response.Redirect(url);
             return;
         }
 

@@ -26,6 +26,16 @@
           注册
         </van-button>
       </div>
+      <div style="margin: 16px;">
+        <van-button round block type="info" url="https://venyo.cn/resader/opensecurity/oauth?service=github">
+          使用 Github 登录
+        </van-button>
+      </div>
+      <div style="margin: 16px;">
+        <van-button round block type="info" url="https://venyo.cn/resader/opensecurity/oauth?service=gitee">
+          使用 Gitee 登录
+        </van-button>
+      </div>
     </van-form>
   </div>
 </template>
