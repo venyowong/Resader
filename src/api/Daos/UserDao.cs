@@ -69,11 +69,22 @@ public class UserDao
         }
 
         using var connection = await connectionFactory.Create();
-        return await connection.ExecuteWithPolly("UPDATE user SET password=@Password, update_time=now() WHERE id=@Id OR mail=@Mail;", new
+        return await connection.ExecuteWithPolly(@"UPDATE user SET password=@Password, update_time=now(), oauth_id=@OauthId,
+            name=@Name, avatar_url=@AvatarUrl, source=@Source, url=@Url, location=@Location, company=@Company, blog=@Blog,
+            bio=@Bio WHERE id=@Id OR mail=@Mail;", new
         {
             user.Id,
             user.Mail,
-            user.Password
+            user.Password,
+            user.OauthId,
+            user.Name,
+            user.AvatarUrl,
+            user.Source,
+            user.Url,
+            user.Location,
+            user.Company,
+            user.Blog,
+            user.Bio
         });
     }
 

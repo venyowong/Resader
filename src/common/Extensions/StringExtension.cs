@@ -89,7 +89,7 @@ namespace Resader.Common.Extensions
             {
                 return Encoding.UTF8.GetString(GZipDecompress(Convert.FromBase64String(zippedString)));
             }
-            catch (Exception e)
+            catch
             {
                 return string.Empty;
             }
@@ -124,7 +124,7 @@ namespace Resader.Common.Extensions
                     }
                 }
             }
-            catch (Exception e)
+            catch
             {
                 return new byte[0];
             }
@@ -141,7 +141,7 @@ namespace Resader.Common.Extensions
             {
                 return Convert.ToBase64String(GZipCompress(Encoding.UTF8.GetBytes(rawString)));
             }
-            catch (Exception e)
+            catch
             {
                 return string.Empty;
             }
@@ -159,7 +159,7 @@ namespace Resader.Common.Extensions
                     return memoryStream.ToArray();
                 }
             }
-            catch (Exception e)
+            catch
             {
                 return new byte[0];
             }
