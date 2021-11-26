@@ -1,0 +1,28 @@
+﻿<li class="nav-item">
+    @if (Disabled)
+    {
+        <a class="nav-link disabled" href="@(Href)">@Title</a>
+    }
+    else
+    {
+        if (string.IsNullOrWhiteSpace(Href))
+        {
+            <a class="nav-link">@Title</a>
+        }
+        else
+        {
+            <a class="nav-link" href="@(Href)">@Title</a>
+        }
+    }
+</li>
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool Disabled{ get; set; }
+
+    [Parameter]
+    public string Href { get; set; } = string.Empty;
+}

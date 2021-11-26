@@ -34,6 +34,7 @@ public class Startup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddControllersWithViews();
+        services.AddRazorPages();
         services.AddSwaggerDocument();
         this.AddRateLimit(services);
         services.Configure<Configuration>(this.Configuration);
@@ -97,6 +98,7 @@ public class Startup
             app.UseDeveloperExceptionPage();
             app.UseOpenApi();
             app.UseSwaggerUi3();
+            app.UseWebAssemblyDebugging();
         }
 
         app.UsePathBase("/resader");
@@ -105,6 +107,7 @@ public class Startup
         options.DefaultFileNames.Clear();
         options.DefaultFileNames.Add("index.html");
         app.UseDefaultFiles(options);
+        app.UseBlazorFrameworkFiles();
         app.UseStaticFiles();
 
         app.UseMiddleware<LogMiddleware>()
@@ -116,9 +119,11 @@ public class Startup
         app.UseRouting();
         app.UseEndpoints(endpoints =>
         {
+            endpoints.MapRazorPages();
             endpoints.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
+            endpoints.MapFallbackToFile("index.html");
         });
 
         Utility.MakeDapperMapping("Resader.Common.Entities");

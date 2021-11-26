@@ -1,0 +1,20 @@
+﻿.tabbar-item {
+}
+
+.tabbar-item ::deep a {
+    color: black;
+}
+
+    .tabbar-item ::deep a.active {
+        color: #0a58ca;
+    }
+
+.tabbar-item-icon {
+    font-size: 18px;
+    text-align: center;
+}
+
+.tabbar-item-text {
+    font-size: 12px;
+    text-align: center;
+}

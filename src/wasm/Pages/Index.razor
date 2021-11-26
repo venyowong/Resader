@@ -1,0 +1,53 @@
+﻿@page "/"
+
+@using Resader.Common.Api.Response
+@using Resader.Common.Extensions
+@using System.Net.Http
+@using System.Net
+
+@inject HttpClient http
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+
+<PageTitle>Index</PageTitle>
+
+<div class="text-center logo">
+  <img src="https://venyo.cn/resader/pwa/img/logo.png">
+</div>
+
+<LinkList>
+    @foreach (var feed in feeds)
+    {
+        <LinkListItem Title="@feed.Title" Href="@($"./articles?id={feed.Id}&title={WebUtility.UrlEncode(feed.Title)}")"
+            Tip="@(feed.Active ? "1" : string.Empty)" TipBackground="danger"></LinkListItem>
+    }
+</LinkList>
+
+@code {
+    private UserResponse? user;
+    private List<FeedResponse> feeds = new List<FeedResponse>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var json = await localStorage.GetItemAsStringAsync("user");
+        user = json.ToObj<UserResponse>();
+        if (user == null)
+        {
+            // todo: 跳转登录
+        }
+
+        if (!http.DefaultRequestHeaders.TryGetValues("token", out var values))
+        {
+            http.DefaultRequestHeaders.Add("token", user!.Token);
+        }
+        var result = await http.GetFromJsonAsync<Result<List<FeedResponse>>>("RSS/Feeds");
+        if (result?.Code != 0)
+        {
+            // todo: 报错
+        }
+
+        feeds = result!.Data;
+        StateHasChanged();
+
+        await base.OnInitializedAsync();
+    }
+}

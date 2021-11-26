@@ -1,0 +1,25 @@
+﻿@page "/login"
+
+<form class="form">
+    <div class="mb-3">
+        <label for="login-mail" class="form-label">邮箱地址</label>
+        <input type="email" class="form-control" id="login-mail">
+    </div>
+    <div class="mb-3">
+        <label for="login-password" class="form-label">密码</label>
+        <input type="password" class="form-control" id="login-password">
+    </div>
+    <div class="btn-group button-groups" role="group">
+      <button type="button" class="btn btn-outline-primary">登录</button>
+      <button type="button" class="btn btn-outline-primary">注册</button>
+    </div>
+    <div class="mb-3 oauth">
+        使用三方帐号登录：
+        <img src="./github.svg" class="oauth-logo"/>
+        <img src="./gitee.svg" class="oauth-logo"/>
+    </div>
+</form>
+
+@code {
+
+}

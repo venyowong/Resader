@@ -20,6 +20,7 @@
     <PackageReference Include="JWT" Version="8.2.0" />
     <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.7" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.9" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="6.0.0" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="5.0.5" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="3.1.5" />
@@ -40,6 +41,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\common\Resader.Common.csproj" />
+    <ProjectReference Include="..\wasm\Resader.Wasm.csproj" />
   </ItemGroup>
 
   <ItemGroup>

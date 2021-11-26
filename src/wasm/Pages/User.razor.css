@@ -1,0 +1,36 @@
+﻿.avatar {
+    border-radius: 10%;
+    height: 120px;
+    margin-top: 20px;
+}
+
+.user-info {
+    font-size: 18px;
+    margin-top: 20px;
+}
+
+.user-info-icon {
+    vertical-align: middle;
+    margin-right: 5px;
+}
+
+a {
+    color: black;
+}
+
+.user-button {
+    text-align: center;
+}
+
+.user-bottom {
+    padding-top: 30px;
+}
+
+.user-space {
+    padding: 2px;
+    background: #80808021;
+}
+
+.list-group-item {
+    border-color: #e9ecef;
+}

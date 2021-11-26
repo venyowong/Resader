@@ -1,0 +1,17 @@
+﻿.form {
+    padding-top: 12px;
+    padding-left: 12px;
+    padding-right: 12px;
+}
+
+.button-groups {
+    width: 100%
+}
+
+.oauth {
+    padding-top: 8px;
+}
+
+.oauth-logo {
+    height: 24px;
+}
