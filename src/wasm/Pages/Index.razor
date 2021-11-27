@@ -6,7 +6,8 @@
 @using System.Net
 
 @inject HttpClient http
-@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject JsService localStorage
+@inject NavigationManager nav
 
 <PageTitle>Index</PageTitle>
 
@@ -28,11 +29,12 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var json = await localStorage.GetItemAsStringAsync("user");
+        var json = await localStorage.GetItem("user");
         user = json.ToObj<UserResponse>();
         if (user == null)
         {
-            // todo: 跳转登录
+            nav.NavigateTo("./login");
+            return;
         }
 
         if (!http.DefaultRequestHeaders.TryGetValues("token", out var values))

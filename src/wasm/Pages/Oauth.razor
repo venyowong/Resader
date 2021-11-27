@@ -1,0 +1,41 @@
+﻿@page "/oauth"
+
+@using Resader.Common.Api.Response
+@using Resader.Common.Extensions
+@using Resader.Wasm.Extensions
+@using System.Net
+
+@inject NavigationManager nav
+@inject JsService jsService
+@inject HttpClient http
+
+<div>redirecting...</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var code = nav.GetQueryParameter("code");
+        switch (code)
+        {
+            case "-1":
+                await jsService.Alert("授权登录失败");
+                return;
+            case "1":
+                var message = WebUtility.UrlDecode(nav.GetQueryParameter("msg"));
+                await jsService.Alert(message);
+                return;
+        }
+
+        var session = nav.GetQueryParameter("session");
+        var response = await http.GetAsync($"./User/GetUserInfoBySession?session={session}");
+        var result = await response.ReadAsObj<Result<UserResponse>>();
+        if (result.Code != 0)
+        {
+            await jsService.Alert(result.Message);
+            return;
+        }
+
+        await jsService.SetItem("user", result.Data.ToJson());
+        nav.NavigateTo("./");
+    }
+}

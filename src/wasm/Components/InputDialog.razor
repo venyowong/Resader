@@ -1,0 +1,40 @@
+﻿<div class="modal fade" id="@Id" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        @if (!string.IsNullOrWhiteSpace(Title))
+        {
+            <h5 class="modal-title" id="exampleModalLabel">@Title</h5>
+        }
+      </div>
+      <div class="modal-body">
+          <input type="text" class="form-control" @bind="input">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick="Confirm">确定</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+@code {
+    private string input { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Id { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public Func<string, Task>? Callback{ get; set; }
+
+    private async Task Confirm()
+    {
+        if (!string.IsNullOrWhiteSpace(input) && Callback != null)
+        {
+            await Callback.Invoke(input);
+        }
+    }
+}

@@ -3,8 +3,9 @@
 @using Resader.Common.Api.Response
 @using Resader.Common.Extensions
 
-@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject JsService jsService
 @inject NavigationManager nav
+@inject HttpClient http
 
 <div>
     @if (string.IsNullOrWhiteSpace(user.AvatarUrl))
@@ -126,14 +127,14 @@
         <div class="list-group-item d-flex align-items-start">
             操作
         </div>
-        <a class="list-group-item d-flex justify-content-between align-items-center" href="https://www.rsssearchhub.com/" target="_blank">
+        <a class="list-group-item d-flex justify-content-between align-items-center" data-bs-toggle="modal" data-bs-target="#import-rss">
             <div class="ms-2 me-auto">
                 <i class="bi bi-box-arrow-in-down user-info-icon"></i>
                 导入 RSS
             </div>
             <i class="bi bi-chevron-right"></i>
         </a>
-        <a class="list-group-item d-flex justify-content-between align-items-center" href="https://www.rsssearchhub.com/" target="_blank">
+        <a class="list-group-item d-flex justify-content-between align-items-center" href="@($"./rss/opml.xml?userId={user.Id}")" target="_blank">
             <div class="ms-2 me-auto">
                 <i class="bi bi-box-arrow-up user-info-icon"></i>
                 导出 OPML
@@ -149,6 +150,8 @@
             退出登录
         </div>
     </div>
+
+    <InputDialog Id="import-rss" Title="导入 RSS" Callback="@Import"></InputDialog>
 </div>
 
 @code {
@@ -156,7 +159,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var json = await localStorage.GetItemAsStringAsync("user");
+        var json = await jsService.GetItem("user");
         if (string.IsNullOrWhiteSpace(json))
         {
             nav.NavigateTo("login");
@@ -176,7 +179,25 @@
 
     private async Task Logout()
     {
-        await localStorage.RemoveItemAsync("user");
+        await jsService.RemoveItem("user");
         nav.NavigateTo("login");
+    }
+
+    private async Task Import(string feed)
+    {
+        if (!http.DefaultRequestHeaders.TryGetValues("token", out var values))
+        {
+            http.DefaultRequestHeaders.Add("token", user!.Token);
+        }
+        var response = await http.PostAsJsonAsync("./rss/Subscribe", new string[] { feed });
+        var result = await response.ReadAsObj<Result<List<FeedOverview>>>();
+        if (result.Data.IsNullOrEmpty())
+        {
+            await jsService.Alert("订阅失败");
+            return;
+        }
+
+        var overview = result.Data.First();
+        nav.NavigateTo($"./articles?id={overview.Id}&title={overview.Title}");
     }
 }

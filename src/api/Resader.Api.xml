@@ -14,11 +14,6 @@
             文章数据月数，若配置为3，则只展示3个月内的文章，若配置为小于等于0，则展示全部数据
             </summary>
         </member>
-        <member name="P:Resader.Api.Configuration.OauthLoginUrl">
-            <summary>
-            oauth 登录页面地址
-            </summary>
-        </member>
         <member name="F:Resader.Api.Const.FeedLatestTimeCache">
             <summary>
             feed 最新更新时间

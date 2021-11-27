@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using OpenSecurity.Oauth;
 using Resader.Api;
@@ -6,6 +7,7 @@ using Resader.Api.Daos;
 using Resader.Api.Services;
 using Resader.Common.Entities;
 using Resader.Common.Helpers;
+using Serilog;
 using System;
 using System.Net;
 using System.Threading.Tasks;
@@ -14,22 +16,29 @@ namespace Resader.Services;
 
 public class LoginService : ILogin
 {
-    private Configuration config;
+    private IConfiguration config;
     private UserDao userDao;
     private UserService userService;
 
-    public LoginService(IOptions<Configuration> config, UserDao userDao, UserService userService)
+    public LoginService(IConfiguration config, UserDao userDao, UserService userService)
     {
-        this.config = config.Value;
+        this.config = config;
         this.userDao = userDao;
         this.userService = userService;
     }
 
     public async Task Login(HttpContext context, UserInfo user)
     {
+        var loginUrl = this.config["Oauth:LoginUrl:wasm"];
+        if (string.IsNullOrWhiteSpace(loginUrl))
+        {
+            Log.Warning("未配置 Oauth:LoginUrl:wasm");
+            context.Response.StatusCode = 500;
+            return;
+        }
         if (string.IsNullOrWhiteSpace(user.Mail))
         {
-            context.Response.Redirect($"{this.config.OauthLoginUrl}?code=1&msg={WebUtility.UrlEncode("三方帐号未关联邮箱")}");
+            context.Response.Redirect($"{loginUrl}?code=1&msg={WebUtility.UrlEncode("三方帐号未关联邮箱")}");
             return;
         }
 
@@ -47,7 +56,7 @@ public class LoginService : ILogin
             await this.userService.UpdateUser(userInfo);
 
             var session = this.userService.GetTokenSession(userInfo);
-            var url = UrlHelper.AddParamIntoQuery(this.config.OauthLoginUrl, "code", "0");
+            var url = UrlHelper.AddParamIntoQuery(loginUrl, "code", "0");
             url = UrlHelper.AddParamIntoQuery(url, "session", session);
             context.Response.Redirect(url);
             return;
@@ -70,13 +79,13 @@ public class LoginService : ILogin
         if (await this.userDao.CreateUser(userInfo))
         {
             var session = this.userService.GetTokenSession(userInfo);
-            var url = UrlHelper.AddParamIntoQuery(this.config.OauthLoginUrl, "code", "0");
+            var url = UrlHelper.AddParamIntoQuery(loginUrl, "code", "0");
             url = UrlHelper.AddParamIntoQuery(url, "session", session);
             context.Response.Redirect(url);
             return;
         }
 
-        context.Response.Redirect($"{this.config.OauthLoginUrl}?code=-1");
+        context.Response.Redirect($"{loginUrl}?code=-1");
         return;
     }
 }

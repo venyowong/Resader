@@ -1,0 +1,55 @@
+﻿@page "/articles"
+
+@using Resader.Common.Api.Response
+@using Resader.Common.Extensions
+@using Resader.Wasm.Extensions
+
+@inject NavigationManager nav
+@inject HttpClient http
+@inject JsService jsService
+
+<div>
+    <NavHeader Title="@title" Operation="取消订阅" Operate="@Unsubscribe"></NavHeader>
+</div>
+
+@code {
+    private string id = string.Empty;
+    private string title = string.Empty;
+    private UserResponse? user;
+    private int page = 0;
+    private List<ArticleResponse> articles = new List<ArticleResponse>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        id = nav.GetQueryParameter("id");
+        title = nav.GetQueryParameter("title");
+        var json = await jsService.GetItem("user");
+        user = json.ToObj<UserResponse>();
+        if (user == null)
+        {
+            nav.NavigateTo("./login");
+            return;
+        }
+
+        // todo: 调接口
+
+
+        StateHasChanged();
+
+        await base.OnInitializedAsync();
+    }
+
+    private async Task Unsubscribe()
+    {
+
+    }
+
+    private async Task Load()
+    {
+        if (!http.DefaultRequestHeaders.TryGetValues("token", out var values))
+        {
+            http.DefaultRequestHeaders.Add("token", user!.Token);
+        }
+        var response = await http.GetAsync($"./rss/Articles?feedId={id}&page={page}&pageSize=30");
+    }
+}

@@ -17,11 +17,6 @@ public class Configuration
     /// 文章数据月数，若配置为3，则只展示3个月内的文章，若配置为小于等于0，则展示全部数据
     /// </summary>
     public int ArticleMonths { get; set; }
-
-    /// <summary>
-    /// oauth 登录页面地址
-    /// </summary>
-    public string OauthLoginUrl { get; set; }
 }
 
 public class LoggingConfig
