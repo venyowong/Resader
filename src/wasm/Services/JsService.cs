@@ -11,29 +11,18 @@ namespace Resader.Wasm.Services
             this.js = js;
         }
 
-        public async Task<string> GetItem(string key)
-        {
-            return await this.js.InvokeAsync<string>("localStorage.getItem", key);
-        }
+        public ValueTask<string> GetItem(string key) => this.js.InvokeAsync<string>("localStorage.getItem", key);
 
-        public async Task SetItem(string key, string value)
-        {
-            await this.js.InvokeVoidAsync("localStorage.setItem", key, value);
-        }
+        public ValueTask SetItem(string key, string value) => this.js.InvokeVoidAsync("localStorage.setItem", key, value);
 
-        public async Task RemoveItem(string key)
-        {
-            await this.js.InvokeVoidAsync("localStorage.removeItem", key);
-        }
+        public ValueTask RemoveItem(string key) => this.js.InvokeVoidAsync("localStorage.removeItem", key);
 
-        public async Task Alert(string message)
-        {
-            await js.InvokeVoidAsync("alert", message);
-        }
+        public ValueTask Alert(string message) => this.js.InvokeVoidAsync("alert", message);
 
-        public async Task GoBack()
-        {
-            await js.InvokeVoidAsync("history.back");
-        }
+        public ValueTask<bool> Confirm(string message) => this.js.InvokeAsync<bool>("confirm", message);
+
+        public ValueTask GoBack() => this.js.InvokeVoidAsync("history.back");
+
+        public ValueTask<long> GetHeightToBottom() => this.js.InvokeAsync<long>("getHeightToBottom");
     }
 }

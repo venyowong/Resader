@@ -1,8 +1,65 @@
-﻿<div class="list-group list-group-flush">
+﻿@inject JsService jsService
+@implements IDisposable
+
+<div class="list-group list-group-flush">
     @ChildContent
 </div>
 
 @code {
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// 启用下拉加载时，判断是否已经加载到底部的间隔时间，默认100ms
+    /// </summary>
+    [Parameter]
+    public int LoadInterval { get; set; } = 100;
+
+    /// <summary>
+    /// 启用下拉加载时，到底部的高度小于该阈值，则认为已经加载到底部
+    /// </summary>
+    [Parameter]
+    public long HeightThreshold { get; set; } = 30;
+
+    [Parameter]
+    public Func<Task>? Load{ get; set; }
+
+    private long lastHeight = -1;
+    private CancellationTokenSource cts = new();
+    private System.Timers.Timer? timer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        timer = new System.Timers.Timer(LoadInterval);
+        timer.Enabled = true;
+        timer.Elapsed += (s, e) => TryLoad(cts).Wait();
+        await base.OnInitializedAsync();
+    }
+
+    private async Task TryLoad(CancellationTokenSource cts)
+    {
+        if (Load == null)
+        {
+            return;
+        }
+
+        cts.Token.ThrowIfCancellationRequested();
+        var height = await jsService.GetHeightToBottom();
+        if (height != lastHeight)
+        {
+            lastHeight = height;
+            if (height <= HeightThreshold)
+            {
+                await Load();
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        cts.Cancel();
+        cts.Dispose();
+        timer!.Stop();
+        timer!.Dispose();
+    }
 }

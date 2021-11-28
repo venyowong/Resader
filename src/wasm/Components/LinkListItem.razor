@@ -1,12 +1,22 @@
-﻿<a class="list-group-item d-flex justify-content-between align-items-center" href="@Href">
-    <p class="text-break link-list-item-title">@Title</p>
-    @if (string.IsNullOrWhiteSpace(Tip))
+﻿<a class="list-group-item list-group-item-action align-items-center" href="@Href" target="@Target">
+    <div class="d-flex w-100 justify-content-between">
+        <p class="text-break link-list-item-title">@Title</p>
+        @if (string.IsNullOrWhiteSpace(Tip))
+        {
+            <i class="bi bi-chevron-right"></i>
+        }
+        else
+        {
+            <span class="@($"badge bg-{TipBackground} rounded-pill")">@Tip</span>
+        }
+    </div>
+    @if (!string.IsNullOrWhiteSpace(Summary))
     {
-        <i class="bi bi-chevron-right"></i>
+        <p class="mb-1">@Summary</p>
     }
-    else
+    @if (!string.IsNullOrWhiteSpace(Footer))
     {
-        <span class="@($"badge bg-{TipBackground} rounded-pill")">@Tip</span>
+        <small>@Footer</small>
     }
 </a>
 
@@ -22,4 +32,13 @@
 
     [Parameter]
     public string Href { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Summary { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Footer { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Target { get; set; } = "_self";
 }

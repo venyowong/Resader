@@ -10,6 +10,13 @@
 
 <div>
     <NavHeader Title="@title" Operation="取消订阅" Operate="@Unsubscribe"></NavHeader>
+    <LinkList Load="@Load">
+        @foreach (var article in articles)
+        {
+            <LinkListItem Title="@article.Title" Href="@article.Url" Summary="@article.Summary" 
+                Footer="@article.Published.ToString("yyyy-MM-dd")" Target="_blank"></LinkListItem>
+        }
+    </LinkList>
 </div>
 
 @code {
@@ -18,6 +25,7 @@
     private UserResponse? user;
     private int page = 0;
     private List<ArticleResponse> articles = new List<ArticleResponse>();
+    private bool finished;
 
     protected override async Task OnInitializedAsync()
     {
@@ -31,25 +39,53 @@
             return;
         }
 
-        // todo: 调接口
-
-
-        StateHasChanged();
-
         await base.OnInitializedAsync();
     }
 
     private async Task Unsubscribe()
     {
-
+        if (await jsService.Confirm($"确定取消订阅{title}？"))
+        {
+            if (!http.DefaultRequestHeaders.TryGetValues("token", out var values))
+            {
+                http.DefaultRequestHeaders.Add("token", user!.Token);
+            }
+            var response = await http.PostAsJsonAsync("./rss/Unsubscribe", new string[] { id });
+            var result = await response.ReadAsObj<Result>();
+            if (result?.Code == 0)
+            {
+                nav.NavigateTo("./");
+            }
+            else
+            {
+                await jsService.Alert("取消订阅失败");
+            }
+        }
     }
 
     private async Task Load()
     {
+        if (finished)
+        {
+            return;
+        }
+
         if (!http.DefaultRequestHeaders.TryGetValues("token", out var values))
         {
             http.DefaultRequestHeaders.Add("token", user!.Token);
         }
         var response = await http.GetAsync($"./rss/Articles?feedId={id}&page={page}&pageSize=30");
+        if (response.IsSuccessStatusCode)
+        {
+            page++;
+            var result = await response.ReadAsObj<Result<List<ArticleResponse>>>();
+            if (result.Data.Count < 30)
+            {
+                finished = true;
+            }
+            articles.AddRange(result.Data);
+
+            StateHasChanged();
+        }
     }
 }
