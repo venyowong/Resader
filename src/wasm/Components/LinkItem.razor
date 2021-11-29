@@ -1,4 +1,4 @@
-﻿<a class="list-group-item list-group-item-action align-items-center" href="@Href" target="@Target">
+﻿<a class="list-group-item list-group-item-action align-items-center" href="@Href" target="@Target" @onclick="@(async () => await (Click?.Invoke() ?? Task.CompletedTask))">
     <div class="d-flex w-100 justify-content-between">
         <p class="text-break link-list-item-title">@Title</p>
         @if (string.IsNullOrWhiteSpace(Tip))
@@ -7,7 +7,7 @@
         }
         else
         {
-            <span class="@($"badge bg-{TipBackground} rounded-pill")">@Tip</span>
+            <span class="@($"badge bg-{TipBackground} rounded-pill tip")">@Tip</span>
         }
     </div>
     @if (!string.IsNullOrWhiteSpace(Summary))
@@ -41,4 +41,7 @@
 
     [Parameter]
     public string Target { get; set; } = "_self";
+
+    [Parameter]
+    public Func<Task>? Click{ get; set; }
 }

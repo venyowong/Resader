@@ -15,13 +15,13 @@
   <img src="https://venyo.cn/resader/pwa/img/logo.png">
 </div>
 
-<LinkList>
+<List>
     @foreach (var feed in feeds)
     {
-        <LinkListItem Title="@feed.Title" Href="@($"./articles?id={feed.Id}&title={WebUtility.UrlEncode(feed.Title)}")"
-            Tip="@(feed.Active ? "1" : string.Empty)" TipBackground="danger"></LinkListItem>
+        <LinkItem Title="@feed.Title" Href="@($"./articles?id={feed.Id}&title={WebUtility.UrlEncode(feed.Title)}")"
+            Tip="@(feed.Active ? feed.NewArticleCount.ToString() : string.Empty)" TipBackground="danger"></LinkItem>
     }
-</LinkList>
+</List>
 
 @code {
     private UserResponse? user;
@@ -29,7 +29,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var json = await localStorage.GetItem("user");
+        var json = await localStorage.GetItem("user-wasm");
         user = json.ToObj<UserResponse>();
         if (user == null)
         {

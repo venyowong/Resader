@@ -16,5 +16,7 @@ namespace Resader.Common.Api.Response
         /// 是否有新更新的文章
         /// </summary>
         public bool Active { get; set; }
+
+        public int NewArticleCount { get; set; }
     }
 }

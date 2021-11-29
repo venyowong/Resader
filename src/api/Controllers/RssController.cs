@@ -97,17 +97,16 @@ public class RssController : BaseController
         return Result.Success(feeds.Select(f =>
         {
             var browseRecord = this.service.GetFeedBrowseRecord(this.GetUserId(), f.Id);
-            var active = true;
-            if (browseRecord != null && browseRecord.UpdateTime >= this.service.GetFeedLatestTime(f.Id))
-            {
-                active = false;
-            }
+            var lastSeen = browseRecord?.UpdateTime ?? DateTime.MinValue;
+            var articles = this.service.GetArticles(f.Id).Result;
+            var newArticleCount = articles.Count(a => a.CreateTime > lastSeen);
             return new FeedResponse
             {
                 Id = f.Id,
                 Title = f.Title,
                 Url = f.Url,
-                Active = active
+                Active = newArticleCount > 0,
+                NewArticleCount = newArticleCount
             };
         })
         .ToList());

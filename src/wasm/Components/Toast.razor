@@ -1,0 +1,53 @@
+﻿@inject JsService jsService
+
+<div id="@Id" class="toast top-0 hide" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="@Delay">
+    @if (!string.IsNullOrWhiteSpace(Title))
+    {
+        <div class="toast-header">
+            @if (!string.IsNullOrWhiteSpace(IconUrl))
+            {
+                <img src="@IconUrl" class="rounded me-2">
+            }
+            <strong class="me-auto">@Title</strong>
+            @if (!string.IsNullOrWhiteSpace(Tip))
+            {
+                <small>@Tip</small>
+            }
+        </div>
+    }
+    <div class="toast-body">
+        @Message
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Id { get; set; } = Guid.NewGuid().ToString();
+
+    [Parameter]
+    public int Delay { get; set; } = 1000;
+
+    [Parameter]
+    public string IconUrl { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Tip { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Message { get; set; } = string.Empty;
+
+    public async Task Show(string message)
+    {
+        Message = message;
+        StateHasChanged();
+        await jsService.ShowToast(Id);
+    }
+
+    public async Task Hide()
+    {
+        await jsService.HideToast(Id);
+    }
+}

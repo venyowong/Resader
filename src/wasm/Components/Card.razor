@@ -1,0 +1,49 @@
+﻿<div class="card mb-3" style="max-width: 540px;" @onclick="@(async () => await (Click?.Invoke() ?? Task.CompletedTask))">
+  <div class="row g-0">
+      @if (!string.IsNullOrWhiteSpace(Image))
+        {
+            <div class="col-4 img">
+              <img src="@Image" class="img-fluid rounded-start">
+            </div>
+            <div class="col-8">
+              <div class="card-body">
+                <h5 class="card-title">@Title</h5>
+                <p class="card-text">@Summary</p>
+                @ChildContent
+                <p class="card-text"><small class="text-muted">@Tip</small></p>
+              </div>
+            </div>
+        }
+        else
+        {
+            <div class="col">
+              <div class="card-body">
+                <h5 class="card-title">@Title</h5>
+                <p class="card-text">@Summary</p>
+                @ChildContent
+                <p class="card-text"><small class="text-muted">@Tip</small></p>
+              </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Image { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Summary { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Tip { get; set; } = string.Empty;
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public Func<Task>? Click{ get; set; }
+}

@@ -19,8 +19,8 @@
         <input type="password" class="form-control" id="login-password" @bind="password">
     </div>
     <div class="btn-group button-groups" role="group">
-      <button type="button" class="btn btn-outline-primary" @onclick="LogIn">登录</button>
-      <button type="button" class="btn btn-outline-primary" @onclick="SignUp">注册</button>
+        <button type="button" class="btn btn-outline-primary" @onclick="LogIn">登录</button>
+        <button type="button" class="btn btn-outline-primary" @onclick="SignUp">注册</button>
     </div>
     <div class="mb-3 oauth">
         使用三方帐号登录：
@@ -67,7 +67,7 @@
             return;
         }
 
-        await jsService.SetItem("user", result.Data.ToJson());
+        await jsService.SetItem("user-wasm", result.Data.ToJson());
         nav.NavigateTo("./");
     }
 
@@ -107,7 +107,7 @@
             }
         }
 
-        await jsService.SetItem("user", result.Data.ToJson());
+        await jsService.SetItem("user-wasm", result.Data.ToJson());
         nav.NavigateTo("./");
     }
 

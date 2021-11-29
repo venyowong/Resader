@@ -49,11 +49,6 @@ public class UserController : BaseController
             return Result.Fail(1, "用户不存在");
         }
 
-        if (user.Password != $"{request.OldPassword}{user.Salt}".Md5())
-        {
-            return Result.Fail(1, "原始密码验证失败");
-        }
-
         user.Password = $"{request.Password}{user.Salt}".Md5();
         if (await this.service.UpdateUser(user))
         {

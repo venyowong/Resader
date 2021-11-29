@@ -35,7 +35,7 @@
             return;
         }
 
-        await jsService.SetItem("user", result.Data.ToJson());
+        await jsService.SetItem("user-wasm", result.Data.ToJson());
         nav.NavigateTo("./");
     }
 }

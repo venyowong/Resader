@@ -1,17 +1,17 @@
 ﻿<li class="nav-item">
     @if (Disabled)
     {
-        <a class="nav-link disabled" href="@(Href)">@Title</a>
+        <a class="nav-link disabled" data-bs-toggle="collapse" data-bs-target=".navbar-collapse.show">@Title</a>
     }
     else
     {
         if (string.IsNullOrWhiteSpace(Href))
         {
-            <a class="nav-link">@Title</a>
+            <a class="nav-link" @onclick="@(async () => await (Click?.Invoke() ?? Task.CompletedTask))" data-bs-toggle="collapse" data-bs-target=".navbar-collapse.show">@Title</a>
         }
         else
         {
-            <a class="nav-link" href="@(Href)">@Title</a>
+            <a class="nav-link" href="@(Href)" @onclick="@(async () => await (Click?.Invoke() ?? Task.CompletedTask))" data-bs-toggle="collapse" data-bs-target=".navbar-collapse.show">@Title</a>
         }
     }
 </li>
@@ -25,4 +25,7 @@
 
     [Parameter]
     public string Href { get; set; } = string.Empty;
+
+    [Parameter]
+    public Func<Task>? Click{ get; set; }
 }

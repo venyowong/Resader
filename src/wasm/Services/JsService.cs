@@ -24,5 +24,11 @@ namespace Resader.Wasm.Services
         public ValueTask GoBack() => this.js.InvokeVoidAsync("history.back");
 
         public ValueTask<long> GetHeightToBottom() => this.js.InvokeAsync<long>("getHeightToBottom");
+
+        public ValueTask ShowToast(string id) => this.js.InvokeVoidAsync("showToast", id);
+
+        public ValueTask HideToast(string id) => this.js.InvokeVoidAsync("hideToast", id);
+
+        public ValueTask<string> Md5(string input) => this.js.InvokeAsync<string>("md5", input);
     }
 }

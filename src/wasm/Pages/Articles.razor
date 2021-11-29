@@ -10,13 +10,18 @@
 
 <div>
     <NavHeader Title="@title" Operation="取消订阅" Operate="@Unsubscribe"></NavHeader>
-    <LinkList Load="@Load">
+    <List Load="@Load">
         @foreach (var article in articles)
         {
-            <LinkListItem Title="@article.Title" Href="@article.Url" Summary="@article.Summary" 
-                Footer="@article.Published.ToString("yyyy-MM-dd")" Target="_blank"></LinkListItem>
+            if (!onlyShowUnread || !article.Read)
+            {
+                <LinkItem Title="@article.Title" Href="@article.Url" Summary="@article.Summary" 
+                    Footer="@article.Published.ToString("yyyy-MM-dd")" Target="_blank" Click="@(() => Read(article.Id))"></LinkItem>
+            }
         }
-    </LinkList>
+    </List>
+
+    <Toast Id="articles-toast" @ref=toast Delay="800"></Toast>
 </div>
 
 @code {
@@ -26,18 +31,23 @@
     private int page = 0;
     private List<ArticleResponse> articles = new List<ArticleResponse>();
     private bool finished;
+    private bool onlyShowUnread;
+    private Toast? toast;
 
     protected override async Task OnInitializedAsync()
     {
         id = nav.GetQueryParameter("id");
         title = nav.GetQueryParameter("title");
-        var json = await jsService.GetItem("user");
+        var json = await jsService.GetItem("user-wasm");
         user = json.ToObj<UserResponse>();
         if (user == null)
         {
             nav.NavigateTo("./login");
             return;
         }
+
+        bool.TryParse(await jsService.GetItem("onlyShowUnread"), out bool b);
+        onlyShowUnread = b;
 
         await base.OnInitializedAsync();
     }
@@ -79,6 +89,7 @@
         {
             page++;
             var result = await response.ReadAsObj<Result<List<ArticleResponse>>>();
+            await toast!.Show($"加载了{result.Data.Count}篇文章");
             if (result.Data.Count < 30)
             {
                 finished = true;
@@ -88,4 +99,6 @@
             StateHasChanged();
         }
     }
+
+    private Task Read(string id) => http.PostAsJsonAsync("./rss/read", new string[] { id });
 }

@@ -100,7 +100,14 @@
                 只展示未读文章
             </div>
             <div class="form-check form-switch mt-2">
-                <input class="form-check-input" type="checkbox" id="onlyShowUnread">
+                @if (onlyShowUnread)
+                {
+                    <input class="form-check-input" type="checkbox" id="onlyShowUnread" checked @onchange="@ChangeUnread">
+                }
+                else
+                {
+                    <input class="form-check-input" type="checkbox" id="onlyShowUnread" @onchange="@ChangeUnread">
+                }
             </div>
         </div>
         <div class="list-group-item d-flex align-items-start user-space"></div>
@@ -143,9 +150,9 @@
         </a>
         <div class="list-group-item d-flex align-items-start user-space"></div>
 
-        <div class="list-group-item user-button">
+        <a class="list-group-item user-button" href="./resetpassword">
             重置密码
-        </div>
+        </a>
         <div class="list-group-item user-button" @onclick="@Logout">
             退出登录
         </div>
@@ -156,10 +163,11 @@
 
 @code {
     private UserResponse user = new UserResponse();
+    private bool onlyShowUnread;
 
     protected override async Task OnInitializedAsync()
     {
-        var json = await jsService.GetItem("user");
+        var json = await jsService.GetItem("user-wasm");
         if (string.IsNullOrWhiteSpace(json))
         {
             nav.NavigateTo("login");
@@ -172,6 +180,9 @@
             return;
         }
 
+        bool.TryParse(await jsService.GetItem("onlyShowUnread"), out bool b);
+        onlyShowUnread = b;
+
         StateHasChanged();
 
         await base.OnInitializedAsync();
@@ -179,7 +190,7 @@
 
     private async Task Logout()
     {
-        await jsService.RemoveItem("user");
+        await jsService.RemoveItem("user-wasm");
         nav.NavigateTo("login");
     }
 
@@ -199,5 +210,11 @@
 
         var overview = result.Data.First();
         nav.NavigateTo($"./articles?id={overview.Id}&title={overview.Title}");
+    }
+
+    private async Task ChangeUnread()
+    {
+        onlyShowUnread = !onlyShowUnread;
+        await jsService.SetItem("onlyShowUnread", onlyShowUnread.ToString());
     }
 }
