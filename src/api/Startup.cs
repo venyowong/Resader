@@ -102,6 +102,8 @@ public class Startup
         }
 
         app.UsePathBase("/resader");
+        app.UseMiddleware<LogMiddleware>()
+            .UseOauth();
 
         var options = new DefaultFilesOptions();
         options.DefaultFileNames.Clear();
@@ -109,9 +111,6 @@ public class Startup
         app.UseDefaultFiles(options);
         app.UseBlazorFrameworkFiles();
         app.UseStaticFiles();
-
-        app.UseMiddleware<LogMiddleware>()
-            .UseOauth();
 
         app.UseIpRateLimiting();
 
