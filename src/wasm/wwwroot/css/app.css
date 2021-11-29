@@ -60,3 +60,11 @@ a, .btn-link {
     .blazor-error-boundary::after {
         content: "An error has occurred."
     }
+
+body::-webkit-scrollbar {
+    display: none !important;
+}
+
+.installing {
+    padding-top: 50%;
+}
