@@ -66,5 +66,7 @@ body::-webkit-scrollbar {
 }
 
 .installing {
-    padding-top: 50%;
+    top: 49%;
+    position: absolute;
+    left: 45%;
 }
