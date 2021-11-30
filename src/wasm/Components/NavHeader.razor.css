@@ -1,0 +1,17 @@
+﻿.row {
+    height: 56px;
+}
+
+.left {
+    margin: auto;
+}
+
+.title {
+    font-size: calc(10% + 1vw + 1vh);
+    margin: auto;
+}
+
+.operation {
+    font-size: calc(10% + 1vw + 1vh);
+    margin: auto;
+}

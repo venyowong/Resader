@@ -1,13 +1,23 @@
 ﻿@inject JsService jsService
 
 <div>
-    <nav class="navbar navbar-expand-lg fixed-top navbar-light bg-light">
-        <div class="container-fluid">
+    <nav class="fixed-top navbar-light bg-light">
+        @*<div class="container-fluid">
             <div class="navbar-brand" @onclick="GoBack"><i class="bi bi-chevron-left"></i></div>
 
             <div>@Title</div>
 
             <div class="d-flex" @onclick="OnOperate">
+                @Operation
+            </div>
+        </div>*@
+
+        <div class="row text-center">
+            <div class="col-2 left" @onclick="GoBack"><i class="bi bi-chevron-left"></i></div>
+
+            <div class="col-7 title">@Title</div>
+
+            <div class="col-3 operation" @onclick="OnOperate">
                 @Operation
             </div>
         </div>
