@@ -69,3 +69,8 @@ Resader 是一个集成了后台定时数据抓取任务、API服务以及阅读
 ![精选](/screenshots/精选.png "精选")
 
 ![我](/screenshots/我.png "我")
+
+## 使用 Release 包运行
+
+1. 从 [Release](https://github.com/venyowong/Resader/releases) 页面下载对应的程序包
+2. 执行 Release 文件(windows: Resader.exe linux/osx: Resader)
