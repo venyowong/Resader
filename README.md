@@ -57,28 +57,12 @@ Resader 是一个集成了后台定时数据抓取任务、API服务以及阅读
 7. 若想禁用定时任务，则在 appsettings.json 中将 UseScheduler 配置为 false
 8. 若启用了 redis，并且有多个实例，想禁用其中部分实例的数据恢复任务，则在 appsettings.json 中将 AutoRecovery 配置为 false，若缓存策略使用的是内存，则一定要为 true
 9. 若想要减少缓存空间，可以修改 appsettings.json 中的 ArticleMonths 配置，该配置表示文章数据月数，若配置为3，则只展示3个月内的文章，若配置为小于等于0，则展示全部数据
+10. 浏览器打开 http://localhost:5303/ 以访问 RSS 阅读器页面
+11. 浏览器打开 http://localhost:5303/admin 以访问后台管理页面
 
-## 打包 PWA 页面
+注：前端页面使用 Blazor WASM 技术开发，首次打开页面需要一段加载时间
 
-1. cd Resader/src/pwa
-2. npm install
-3. npm run build
-4. 将 dist 放在 api 服务的 wwwroot 下或者挂载在 nginx 服务下
-
-## 使用 Release 包运行
-
-1. 从 [Release](https://github.com/venyowong/Resader/releases) 页面下载对应的程序包
-2. 执行 Release 文件
-3. 浏览器打开 http://localhost:5303/pwa 以访问 RSS 阅读器页面
-4. 浏览器打开 http://localhost:5303/admin 以访问后台管理页面
-
-## 线上 PWA 链接
-
-https://venyo.cn/resader/pwa/
-
-注：由于该页面只适配了手机端，因此请在手机上打开或者使用浏览器的设备仿真功能进行浏览
-
-## PWA 页面截图
+## 页面截图
 
 ![首页](/screenshots/首页.png "首页")
 
