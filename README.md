@@ -15,7 +15,7 @@ Resader 是一个集成了后台定时数据抓取任务、API服务以及阅读
 
 由于代码暂时还未稳定，因此暂不提供 release 包，可自行克隆源码本地进行编译。
 
-1. 安装 [.net core](https://dotnet.microsoft.com/download)，请安装 .net 5.0 以上版本的 sdk
+1. 安装 [.net core](https://dotnet.microsoft.com/download)，请安装 .net6 版本的 sdk
 2. 安装 [mysql](https://dev.mysql.com/downloads/)
 3. git clone https://gitee.com/venyowong/Resader & cd Resader/src/api
 4. 复制 appsettings.Staging.json 改名为 appsettings.Production.json，并修改 mysql 连接字符串
