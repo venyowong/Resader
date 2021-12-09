@@ -27,6 +27,7 @@
     private long lastHeight = -1;
     private CancellationTokenSource cts = new();
     private System.Timers.Timer? timer;
+    private volatile bool loading;
 
     protected override async Task OnInitializedAsync()
     {
@@ -42,6 +43,10 @@
         {
             return;
         }
+        if (loading)
+        {
+            return;
+        }
 
         cts.Token.ThrowIfCancellationRequested();
         var height = await jsService.GetHeightToBottom();
@@ -50,7 +55,9 @@
             lastHeight = height;
             if (height <= HeightThreshold)
             {
+                loading = true;
                 await Load();
+                loading = false;
             }
         }
     }
