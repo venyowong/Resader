@@ -59,9 +59,9 @@ public class RssController : BaseController
 
     [JwtValidation]
     [HttpPost("Subscribe")]
-    public Result<List<FeedOverview>> Subscribe([Required][FromBody] List<string> feeds, [FromServices] FetchService fetchService)
+    public Result<List<FeedOverview>> Subscribe([Required][FromBody] List<string> feeds)
     {
-        var tasks = feeds.Select(feed => this.SubscribeFeed(feed, this.GetUserId(), fetchService)).ToArray();
+        var tasks = feeds.Select(feed => this.SubscribeFeed(feed, this.GetUserId())).ToArray();
         Task.WaitAll(tasks);
         return Result.Success(tasks.Select(t => t.Result)
             .Where(f => f != null)
@@ -95,7 +95,7 @@ public class RssController : BaseController
     public Result<List<FeedResponse>> GetFeeds()
     {
         var feeds = this.service.GetFeeds(this.GetUserId());
-        return Result.Success(feeds.Select(f =>
+        return Result.Success(feeds.OrderBy(f => f.CreateTime).Select(f =>
         {
             var browseRecord = this.service.GetFeedBrowseRecord(this.GetUserId(), f.Id);
             var lastSeen = browseRecord?.UpdateTime ?? DateTime.MinValue;
@@ -159,10 +159,10 @@ public class RssController : BaseController
             .Where(f => f.Article != null)
             .OrderByDescending(x => x.Article?.CreateTime)
             .ToList();
-        }, new TimeSpan(0, 30, 0));
+        }, new TimeSpan(0, 5, 0));
     }
 
-    private async Task<FeedOverview> SubscribeFeed(string feed, string userId, FetchService fetchService)
+    private async Task<FeedOverview> SubscribeFeed(string feed, string userId)
     {
         var fetchResult = await this.service.AddFeed(feed);
         if (fetchResult == default)
