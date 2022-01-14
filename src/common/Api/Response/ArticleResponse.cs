@@ -31,5 +31,7 @@ namespace Resader.Common.Api.Response
         public string Copyright { get; set; }
 
         public bool Read { get; set; }
+
+        public string Image { get; set; }
     }
 }

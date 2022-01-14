@@ -14,6 +14,10 @@
     {
         <p class="mb-1">@Summary</p>
     }
+    @if (!string.IsNullOrWhiteSpace(Image))
+    {
+        <img class="img" src="@Image" />
+    }
     @if (!string.IsNullOrWhiteSpace(Footer))
     {
         <small>@Footer</small>
@@ -35,6 +39,9 @@
 
     [Parameter]
     public string Summary { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Image { get; set; } = string.Empty;
 
     [Parameter]
     public string Footer { get; set; } = string.Empty;

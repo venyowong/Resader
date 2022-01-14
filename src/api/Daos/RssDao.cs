@@ -54,8 +54,8 @@ public class RssDao
 
         using var connection = await connectionFactory.Create();
         return await connection.ExecuteWithPolly("INSERT INTO article(id, url, feed_id, title, summary, published, updated, keyword, content, contributors, " +
-            "authors, copyright, create_time, update_time) VALUES(@Id, @Url, @FeedId, @Title, @Summary, @Published, @Updated, @Keyword, @Content, " +
-            "@Contributors, @Authors, @Copyright, now(), now())", articles);
+            "authors, copyright, create_time, update_time, image) VALUES(@Id, @Url, @FeedId, @Title, @Summary, @Published, @Updated, @Keyword, @Content, " +
+            "@Contributors, @Authors, @Copyright, now(), now(), @Image)", articles);
     }
 
     public async Task<bool> UpdateArticle(Article article)

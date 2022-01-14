@@ -37,5 +37,7 @@ namespace Resader.Common.Entities
 
         [Column("update_time")]
         public DateTime UpdateTime { get; set; }
+
+        public string Image { get; set; }
     }
 }

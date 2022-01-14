@@ -28,7 +28,8 @@ namespace Resader.Common
                 Content = article.Content,
                 Contributors = article.Contributors,
                 Authors = article.Authors,
-                Copyright = article.Copyright
+                Copyright = article.Copyright,
+                Image = article.Image
             };
         }
     }

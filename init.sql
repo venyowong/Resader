@@ -37,6 +37,7 @@ CREATE TABLE article(
 ALTER TABLE article ADD INDEX feed_id_index(feed_id);
 ALTER TABLE article DROP created;
 ALTER TABLE article MODIFY url VARCHAR(500) NOT NULL;
+ALTER TABLE article ADD image VARCHAR(200) NULL;
 
 CREATE TABLE subscription(
     id INT PRIMARY KEY AUTO_INCREMENT,

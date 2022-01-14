@@ -7,12 +7,15 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace Resader.Api.Services;
 
 public class FetchService
 {
     public HttpClient Client { get; set; }
+
+    private static readonly Regex _imageRegex = new Regex("<img src=\"([^\"]+)\"");
 
     public FetchService(HttpClient httpClient)
     {
@@ -89,6 +92,10 @@ public class FetchService
 
             var articleId = feedId + articleUrl.Md5();
             var content = this.Simplify(item.Content);
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                content = this.Simplify(item.Description);
+            }
             var article = new Article
             {
                 Id = articleId,
@@ -103,6 +110,14 @@ public class FetchService
                 Contributors = item.Author,
                 Authors = item.Author
             };
+            if (!string.IsNullOrWhiteSpace(content))
+            {
+                var match = _imageRegex.Match(content);
+                if (match.Success)
+                {
+                    article.Image = match.Groups[1].Value;
+                }
+            }
             articles.Add(article);
         }
 

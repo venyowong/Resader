@@ -15,7 +15,7 @@
         {
             if (!onlyShowUnread || !article.Read)
             {
-                <LinkItem Title="@article.Title" Href="@article.Url" Summary="@article.Summary" 
+                <LinkItem Title="@article.Title" Href="@article.Url" Summary="@article.Summary" Image="@article.Image"
                     Footer="@article.Published.ToString("yyyy-MM-dd HH:mm:ss")" Target="_blank" Click="@(() => Read(article.Id))"></LinkItem>
             }
         }
