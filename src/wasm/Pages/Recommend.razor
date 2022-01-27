@@ -45,7 +45,7 @@
 
         var response = await http.GetAsync($"./rss/RecommendFeeds?label={label}");
         var result = await response.ReadAsObj<List<RecommendedFeed>>();
-        if (!result.IsNullOrEmpty())
+        if (result != null)
         {
             feeds = result;
         }
