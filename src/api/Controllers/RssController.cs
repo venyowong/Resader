@@ -95,22 +95,25 @@ public class RssController : BaseController
     public Result<List<FeedResponse>> GetFeeds()
     {
         var feeds = this.service.GetFeeds(this.GetUserId());
-        return Result.Success(feeds.OrderBy(f => f.CreateTime).Select(f =>
-        {
-            var browseRecord = this.service.GetFeedBrowseRecord(this.GetUserId(), f.Id);
-            var lastSeen = browseRecord?.UpdateTime ?? DateTime.MinValue;
-            var articles = this.service.GetArticles(f.Id).Result;
-            var newArticleCount = articles.Count(a => a.CreateTime > lastSeen);
-            return new FeedResponse
+        return Result.Success(feeds.OrderBy(f => f.CreateTime)
+            .AsParallel()
+            .AsOrdered()
+            .Select(f =>
             {
-                Id = f.Id,
-                Title = f.Title,
-                Url = f.Url,
-                Active = newArticleCount > 0,
-                NewArticleCount = newArticleCount
-            };
-        })
-        .ToList());
+                var browseRecord = this.service.GetFeedBrowseRecord(this.GetUserId(), f.Id);
+                var lastSeen = browseRecord?.UpdateTime ?? DateTime.MinValue;
+                var articles = this.service.GetArticles(f.Id).Result;
+                var newArticleCount = articles.Count(a => a.CreateTime > lastSeen);
+                return new FeedResponse
+                {
+                    Id = f.Id,
+                    Title = f.Title,
+                    Url = f.Url,
+                    Active = newArticleCount > 0,
+                    NewArticleCount = newArticleCount
+                };
+            })
+            .ToList());
     }
 
     [HttpGet("opml.xml")]
@@ -151,14 +154,16 @@ public class RssController : BaseController
         {
             var feeds = recommendService.GetLabeledFeeds(label)
                 .FindAll(f => f.Recommend);
-            return feeds.Select(f => new RecommendedFeed
-            {
-                Feed = f,
-                Article = rssService.GetArticles(f.Id).Result.OrderByDescending(f => f.CreateTime).FirstOrDefault()
-            })
-            .Where(f => f.Article != null)
-            .OrderByDescending(x => x.Article?.CreateTime)
-            .ToList();
+            return feeds.AsParallel()
+                .AsOrdered()
+                .Select(f => new RecommendedFeed
+                {
+                    Feed = f,
+                    Article = rssService.GetArticles(f.Id).Result.OrderByDescending(f => f.CreateTime).FirstOrDefault()
+                })
+                .Where(f => f.Article != null)
+                .OrderByDescending(x => x.Article?.CreateTime)
+                .ToList();
         }, new TimeSpan(0, 5, 0));
     }
 
