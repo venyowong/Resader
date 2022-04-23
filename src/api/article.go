@@ -13,12 +13,10 @@ func GetArticles(c *gin.Context) {
 		c.String(403, "feed id 不能为空")
 		return
 	}
-	jwt, exist := c.Get("jwt")
-	if !exist {
-		c.String(401, "token 不合法")
+	userId, v := getUserId(c)
+	if !v {
 		return
 	}
-	userId := jwt.(JwtPayload).UserId
 	onlyunread := c.Query("onlyunread")
 	read := 2
 	if onlyunread == "true" {
@@ -49,12 +47,10 @@ func ReadArticle(c *gin.Context) {
 		c.String(403, "文章 id 不能为空")
 		return
 	}
-	jwt, e := c.Get("jwt")
-	if !e {
-		c.String(401, "token 不合法")
+	userId, v := getUserId(c)
+	if !v {
 		return
 	}
-	userId := jwt.(JwtPayload).UserId
 
 	db.InsertReadRecord(db.ReadRecord{
 		UserId:    userId,
