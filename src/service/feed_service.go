@@ -53,13 +53,13 @@ func Fetch(url string) (db.Feed, []db.Article) {
 			FeedId:    feedId,
 			Title:     item.Title,
 			Published: item.Published,
-			Content:   simplify(item.Content),
+			Content:   item.Content,
 			Authors: strings.Join(helper.Select(item.Authors, func(t *gofeed.Person) string {
 				return t.Name
 			}), ","),
 		}
 		if article.Content == "" {
-			article.Content = simplify(item.Description)
+			article.Content = item.Description
 		}
 		if item.Image != nil {
 			article.Image = item.Image.URL
@@ -104,13 +104,4 @@ func SubscribeFeed(userId int, url string) bool {
 	}
 
 	return true
-}
-
-func simplify(input string) string {
-	length := len(input)
-	if length <= 500 {
-		return input
-	}
-
-	return input[0:length-3] + "..."
 }
