@@ -33,7 +33,10 @@ func GetFeeds() []Feed {
 }
 
 func GetFeedsByUser(userId int) []Feed {
-	rows, err := db.Query("SELECT * FROM feed WHERE id IN (SELECT feed_id FROM subscription WHERE user_id=?)", userId)
+	rows, err := db.Query(`SELECT f.*, b.t >= IFNULL(a.t, DATETIME('1990-01-01')) Active FROM feed f
+	LEFT JOIN (SELECT feed_id, MAX(create_time) t  FROM feed_browse_record WHERE user_id=? GROUP BY feed_id) a ON f.id==a.feed_id
+	LEFT JOIN (SELECT feed_id, MAX(create_time) t  FROM article GROUP BY feed_id) b ON f.id==b.feed_id
+	WHERE f.id IN (SELECT feed_id FROM subscription WHERE user_id=?)`, userId, userId)
 	if err != nil {
 		log.Printf("GetFeeds 失败 %s", err)
 		return nil
@@ -48,6 +51,10 @@ func GetFeedById(id string) Feed {
 	return getFeedByRow(row)
 }
 
+func InsertFeedBrowseRecord(userId int, feedId string) {
+	db.Exec("INSERT INTO feed_browse_record(user_id, feed_id) VALUES(?, ?)", userId, feedId)
+}
+
 func getFeedFromRows(r *sql.Rows) Feed {
 	var id string
 	var url string
@@ -56,13 +63,15 @@ func getFeedFromRows(r *sql.Rows) Feed {
 	var image string
 	var createTime time.Time
 	var updateTime time.Time
-	r.Scan(&id, &url, &title, &description, &image, &createTime, &updateTime)
+	var active bool
+	r.Scan(&id, &url, &title, &description, &image, &createTime, &updateTime, &active)
 	return Feed{
 		Id:          id,
 		Url:         url,
 		Title:       title,
 		Description: description,
 		Image:       image,
+		Active:      active,
 		CreateTime:  createTime,
 		UpdateTime:  updateTime,
 	}

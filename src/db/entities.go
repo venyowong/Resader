@@ -8,6 +8,7 @@ type Feed struct {
 	Title       string
 	Description string
 	Image       string
+	Active      bool
 	CreateTime  time.Time
 	UpdateTime  time.Time
 }

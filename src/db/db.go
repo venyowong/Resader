@@ -76,21 +76,12 @@ func Init() {
 		
 		CREATE TABLE feed_browse_record(
 			feed_id VARCHAR(100) NOT NULL,
-			user_id VARCHAR(50) NOT NULL,
+			user_id int NOT NULL,
 			create_time DATETIME NOT NULL DEFAULT current_timestamp,
 			update_time DATETIME NOT NULL DEFAULT current_timestamp
 		);
 		
-		CREATE UNIQUE INDEX user_feed_unique ON feed_browse_record(user_id, feed_id);
-		
-		CREATE TABLE recommend(
-			label VARCHAR(50) NOT NULL,
-			feed_id VARCHAR(100) NOT NULL,
-			create_time DATETIME NOT NULL DEFAULT current_timestamp,
-			update_time DATETIME NOT NULL DEFAULT current_timestamp
-		);
-		
-		CREATE UNIQUE INDEX label_feed_unique ON recommend(label, feed_id);`)
+		CREATE INDEX user_feed_index ON feed_browse_record(user_id, feed_id);`)
 		if err != nil {
 			fmt.Printf("创建数据库失败 %q", err)
 			db.Close()

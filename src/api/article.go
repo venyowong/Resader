@@ -17,6 +17,8 @@ func GetArticles(c *gin.Context) {
 	if !v {
 		return
 	}
+
+	db.InsertFeedBrowseRecord(userId, feedId)
 	onlyunread := c.Query("onlyunread")
 	read := 2
 	if onlyunread == "true" {

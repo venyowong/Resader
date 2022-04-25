@@ -57,6 +57,7 @@ func GetFeeds(c *gin.Context) {
 	if !v {
 		return
 	}
+
 	feeds := db.GetFeedsByUser(userId)
 	helper.Order(feeds, func(t db.Feed) float64 {
 		return float64(t.CreateTime.Unix())

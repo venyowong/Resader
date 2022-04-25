@@ -24,6 +24,12 @@
         margin: 0;
         padding: 0;
       }
+
+      .red-dot {
+        width: 5px;
+        height: 5px;
+        color: red;
+      }
     </style>
   </head>
   <body>
@@ -129,6 +135,11 @@
                     title: "$Title",
                     desc: "$Description",
                     actions: [
+                      {
+                        icon: "fa fa-bell",
+                        className: "text-danger",
+                        visibleOn: "data.Active"
+                      },
                       {
                         "icon": "fa fa-times",
                         "confirmText": "确定取消订阅?",
