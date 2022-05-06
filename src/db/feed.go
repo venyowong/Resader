@@ -29,7 +29,7 @@ func GetFeeds() []Feed {
 	}
 	defer rows.Close()
 
-	return ToList(rows, getFeedFromRows)
+	return ToList(rows, getFeedFromRows2)
 }
 
 func GetFeedsByUser(userId int) []Feed {
@@ -72,6 +72,27 @@ func getFeedFromRows(r *sql.Rows) Feed {
 		Description: description,
 		Image:       image,
 		Active:      active,
+		CreateTime:  createTime,
+		UpdateTime:  updateTime,
+	}
+}
+
+func getFeedFromRows2(r *sql.Rows) Feed {
+	var id string
+	var url string
+	var title string
+	var description string
+	var image string
+	var createTime time.Time
+	var updateTime time.Time
+	r.Scan(&id, &url, &title, &description, &image, &createTime, &updateTime)
+	return Feed{
+		Id:          id,
+		Url:         url,
+		Title:       title,
+		Description: description,
+		Image:       image,
+		Active:      false,
 		CreateTime:  createTime,
 		UpdateTime:  updateTime,
 	}

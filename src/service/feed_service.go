@@ -15,10 +15,12 @@ var imgReg, _ = regexp.Compile("<img src=\"([^\"]+)\"")
 func DoFetchJob() {
 	log.Println("开始抓取 RSS")
 	feeds := db.GetFeeds()
+	log.Printf("rss feed 数量：%d", len(feeds))
 	for _, feed := range feeds {
+		log.Printf("开始抓取 %s", feed.Url)
 		_, articles := Fetch(feed.Url)
 		if articles == nil {
-			log.Printf("未获取到文章 %s", feed)
+			log.Printf("未获取到文章 %s", feed.Url)
 			continue
 		}
 
