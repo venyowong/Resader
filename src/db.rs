@@ -4,6 +4,7 @@ use rusqlite::{Connection, params};
 
 pub mod user;
 pub mod feed;
+pub mod article;
 
 static DB_NAME: &str = "resader.db";
 

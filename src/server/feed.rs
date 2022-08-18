@@ -1,10 +1,12 @@
 use std::cmp::Ordering;
 
 use actix_web::{Responder, HttpResponse, get, HttpRequest, web, post};
+use chrono::Local;
 use rusqlite::Error;
 use serde::{Serialize, Deserialize};
+use futures::executor::block_on;
 
-use crate::{db::feed::{get_feeds_by_user, Feed, get_feed_by_id}, helper::{self, md5}, service::feed::fetch};
+use crate::{db::feed::{get_feeds_by_user, Feed, get_feed_by_id, insert_feed}, helper::{self, md5}, service::feed::fetch};
 
 use super::handle_with_token;
 
@@ -16,7 +18,7 @@ struct FeedsResult {
 
 #[derive(Serialize)]
 struct FeedModel {
-    id: i64,
+    id: String,
     url: String,
     title: String,
     desc: String,
@@ -70,15 +72,36 @@ pub async fn subscribe_feed(req: HttpRequest, p: web::Form<SubscribeParams>) -> 
         let feed = match feed {
             Ok(f) => f,
             Err(Error::QueryReturnedNoRows) => {
-                let channel = fetch(&p.url).await;
+                let channel = block_on(fetch(&p.url));
                 let channel = match channel {
                     Ok(c) => c,
                     Err(_) => return HttpResponse::BadRequest().body("获取 feed 失败")
                 };
 
-                Feed {
-
+                let img = match channel.image {
+                    Some(i) => i.link,
+                    None => String::new()
+                };
+                let f = Feed {
+                    id: feed_id.clone(),
+                    url: p.url.clone(),
+                    title: channel.title,
+                    desc: channel.description,
+                    image: img,
+                    active: false,
+                    create_time: Local::now(),
+                    update_time: Local::now()
+                };
+                let success = insert_feed(&f);
+                let success = match success {
+                    Ok(s) => s,
+                    Err(_) => return HttpResponse::BadRequest().body("插入 feed 失败")
+                };
+                if !success {
+                    return HttpResponse::BadRequest().body("插入 feed 失败");
                 }
+
+                f
             },
             Err(_) => return HttpResponse::InternalServerError().body("数据库查询失败")
         };

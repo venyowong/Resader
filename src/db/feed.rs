@@ -4,7 +4,7 @@ use rusqlite::{Connection, params, Row, Error};
 use crate::helper;
 
 pub struct Feed {
-    pub id: i64,
+    pub id: String,
     pub url: String,
     pub title: String,
     pub desc: String,
@@ -31,6 +31,13 @@ pub fn get_feeds_by_user(user_id: i64) -> Result<Vec<Feed>, Error> {
 pub fn get_feed_by_id(id: &str) -> Result<Feed, Error> {
     let conn = Connection::open(super::DB_NAME)?;
     conn.query_row("SELECT * FROM feed WHERE id=?1", params![id], get_feed)
+}
+
+pub fn insert_feed(f: &Feed) -> Result<bool, Error> {
+    let conn = Connection::open(super::DB_NAME)?;
+    let rows = conn.execute("INSERT INTO feed(id, url, title, desc, image) VALUES(?1, ?2, ?3, ?4, ?5)", 
+        params![f.id, f.url, f.title, f.desc, f.image])?;
+    Ok(rows > 0)
 }
 
 fn get_feed(row: &Row) -> Result<Feed, Error> {

@@ -28,14 +28,14 @@ pub fn insert_user(user: &User) -> Result<i64, Error> {
 }
 
 fn get_user(row: &Row) -> Result<User, Error> {
-    let createTime: String = row.get(4)?;
-    let updateTime: String = row.get(5)?;
+    let create_time: String = row.get(4)?;
+    let update_time: String = row.get(5)?;
     Ok(User {
         id: row.get(0)?,
         mail: row.get(1)?,
         password: row.get(2)?,
         salt: row.get(3)?,
-        create_time: helper::parse_datetime_from_str(&createTime),
-        update_time: helper::parse_datetime_from_str(&updateTime)
+        create_time: helper::parse_datetime_from_str(&create_time),
+        update_time: helper::parse_datetime_from_str(&update_time)
     })
 }
